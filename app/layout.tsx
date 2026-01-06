@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins, Roboto } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/auth-context";
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import Categories from "./components/Categories";
+
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
+  weight: ["400", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const roboto = Roboto({
+  variable: "--font-roboto",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -23,11 +29,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <AuthProvider>{children}</AuthProvider>
+    <html lang="pl">
+      <body className={`${poppins.variable} ${roboto.variable} antialiased`}>
+        <AuthProvider>
+          <Header />
+          <Categories />
+          <main className="flex-1 font-poppins">{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

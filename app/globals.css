@@ -1,36 +1,52 @@
 @import "tailwindcss";
 
+/* =======================
+   ZMIENNE CSS GLOBALNE
+   ======================= */
 :root {
-  --color-primary: #2f7d32; /* Zieleń */
-  --color-secondary: #6d4c41; /* Brąz */
-  --color-background: #f5f3ee; /* Beż */
-  --color-accent: #ffb300; /* Żółty */
-  --color-text-main: #1b1b1b; /* Czarny */
-  --color-text-secondary: #666666; /* Szary */
-  --font-sans: Arial, Helvetica, sans-serif;
+  /* Kolory NatureWorld z logo */
+  --color-primary: #2f7d32; /* Zieleń – CTA, nagłówki */
+  --color-secondary: #6d6d6d; /* Szary – tekst mniej ważny */
+  --color-accent: #ffb300; /* Żółty – hover / CTA */
+  --color-background: #f5f3ee; /* Jasne tło strony */
+  --color-text-main: #1b1b1b; /* Główny tekst */
+  --color-text-secondary: #666666; /* Opisy, meta, mniejsze teksty */
+  --font-sans: "Roboto", sans-serif;
+  --font-heading: "Poppins", sans-serif;
 }
 
 @theme inline {
   --color-primary: var(--color-primary);
   --color-secondary: var(--color-secondary);
-  --color-background: var(--color-background);
   --color-accent: var(--color-accent);
+  --color-background: var(--color-background);
   --color-text-main: var(--color-text-main);
   --color-text-secondary: var(--color-text-secondary);
   --font-sans: var(--font-sans);
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: #0a0a0a;
-    --color-text-main: #ededed;
-    --color-text-secondary: #999999;
-  }
+html[data-theme="dark"] {
+  --color-background: #f5f3ee;
+  --color-text-main: #1b1b1b;
+  --color-text-secondary: #666666;
 }
 
+html[data-theme="light"] {
+  --color-background: #f5f3ee;
+  --color-text-main: #1b1b1b;
+  --color-text-secondary: #666666;
+}
 body {
   background: var(--color-background);
   color: var(--color-text-main);
   font-family: var(--font-sans);
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  color: var(--color-text-main);
 }
