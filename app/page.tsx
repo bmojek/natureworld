@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { auth } from "./lib/firebase";
 
 export default function Home() {
   return (
@@ -7,7 +8,7 @@ export default function Home() {
 
       <div className="w-64 h-64 relative">
         <Image
-          src="/api/image/logo.jpg"
+          src="/api/image/logo.webp"
           alt="Logo"
           fill
           className="object-contain"
