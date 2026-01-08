@@ -7,8 +7,7 @@ export default function Home() {
       <div className="w-full flex flex-col items-center">
         <h1 className="text-4xl font-bold text-text-main mt-6">NatureWorld</h1>
         <p className="mt-4 text-text-secondary text-center max-w-xl">
-          Sklep zoologiczno-ogrodniczy – Next.js + Firebase + Cloudflare R2
-          (Private Bucket + Proxy API)
+          Sklep zoologiczno-ogrodniczy
         </p>
       </div>
 

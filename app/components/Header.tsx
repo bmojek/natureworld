@@ -59,7 +59,7 @@ export default function Header() {
               {open && (
                 <div className="absolute z-100 right-0 mt-3 w-48 rounded-xl border bg-white shadow-lg overflow-hidden ">
                   <Link
-                    href="/profile"
+                    href="/profil"
                     className="block px-4 py-3 text-sm hover:bg-gray-100"
                     onClick={() => setOpen(false)}
                   >
