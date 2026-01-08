@@ -31,7 +31,7 @@ export default function Categories() {
 
             {/* Mega menu */}
             {cat.children.length > 0 && (
-              <div className="absolute top-full left-0 w-screen bg-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+              <div className="absolute top-full left-0 w-screen bg-background shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ">
                 <div className="max-w-7xl mx-auto grid grid-cols-4 gap-6 p-6">
                   {cat.children.map((sub) => (
                     <div key={sub.id}>

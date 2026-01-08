@@ -15,7 +15,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Nature World",
+  title: "Nature-World - sklep zoologiczno-ogrodniczy",
   description: "NatureWorld - sklep zoologiczno-ogrodniczy",
 };
 

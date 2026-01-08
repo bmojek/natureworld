@@ -28,10 +28,10 @@ export default function Header() {
         {/* Logo */}
         <Link href="/">
           <Image
-            src="/api/image/logot.webp"
+            src="/api/image/logo.webp"
             alt="Logo NatureWorld"
             width={200}
-            height={40}
+            height={50}
             priority
           />
         </Link>

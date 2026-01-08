@@ -27,7 +27,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex justify-center px-4 py-16">
+    <main className="flex justify-center px-4 py-5">
       <div className="w-full max-w-md rounded-2xl  p-8">
         <div className="relative flex items-center justify-center mb-6">
           <ArrowLeft

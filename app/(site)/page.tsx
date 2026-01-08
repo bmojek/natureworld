@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <main className="max-w-7xl mx-auto p-8 flex flex-col items-center">
+    <main className="max-w-7xl mx-auto p-8 flex flex-col items-center ">
       {/* Hero */}
       <div className="w-full flex flex-col items-center">
         <h1 className="text-4xl font-bold text-text-main mt-6">NatureWorld</h1>
