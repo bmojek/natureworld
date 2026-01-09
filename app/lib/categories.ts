@@ -4,6 +4,7 @@ export interface CategoryTree extends CategoryModel {
   children: CategoryTree[];
 }
 
+let cachedTree: CategoryTree[] | null = null;
 export function buildCategoryTree(categories: CategoryModel[]): CategoryTree[] {
   const map = new Map<string, CategoryTree>();
 
@@ -22,4 +23,13 @@ export function buildCategoryTree(categories: CategoryModel[]): CategoryTree[] {
   });
 
   return tree;
+}
+
+export function getCachedCategoryTree(
+  categories: CategoryModel[]
+): CategoryTree[] {
+  if (!cachedTree) {
+    cachedTree = buildCategoryTree(categories);
+  }
+  return cachedTree;
 }

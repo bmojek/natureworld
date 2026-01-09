@@ -1,12 +1,13 @@
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/app/lib/firebase";
 import { CategoryModel } from "@/app/models/category";
 
 export async function getCategories(): Promise<CategoryModel[]> {
-  const snap = await getDocs(collection(db, "categories"));
+  const res = await fetch("/api/categories", {
+    next: { revalidate: 300 },
+  });
 
-  return snap.docs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Omit<CategoryModel, "id">),
-  }));
+  if (!res.ok) {
+    throw new Error("Failed to fetch categories");
+  }
+
+  return res.json();
 }

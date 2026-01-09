@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { getCategories } from "@/app/lib/firestore-categories";
+import { headers } from "next/headers";
 import { buildCategoryTree } from "@/app/lib/categories";
 import {
   findCategoryBySlugPath,
   collectCategoryIds,
   findParentCategory,
 } from "@/app/lib/category-utils";
-import { getProductsByCategoryIds } from "@/app/lib/firestore-products";
-import Image from "next/image";
+import ProductsInfinite from "./products-infinite";
+import { CategoryModel } from "@/app/models/category";
 
 type PageProps = {
   params: Promise<{
@@ -15,22 +15,42 @@ type PageProps = {
   }>;
 };
 
+// 🔑 FETCH Z API – TYLKO TUTAJ
+async function fetchCategories(): Promise<CategoryModel[]> {
+  const h = await headers();
+  const host = h.get("host");
+
+  if (!host) {
+    throw new Error("Missing host header");
+  }
+
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+
+  const res = await fetch(`${protocol}://${host}/api/categories`, {
+    next: { revalidate: 300 }, // cache Next.js
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch categories");
+  }
+
+  return res.json();
+}
+
 export default async function CategoryPage({ params }: PageProps) {
+  // 🔑 ZAWSZE await params
   const { slug } = await params;
 
-  const categories = await getCategories();
+  // ✅ API zamiast Firestore
+  const categories = await fetchCategories();
   const tree = buildCategoryTree(categories);
 
   const category = findCategoryBySlugPath(tree, slug);
-
   if (!category) {
     return <div className="p-12">Nie znaleziono kategorii</div>;
   }
 
   const categoryIds = collectCategoryIds(category);
-
-  const products = await getProductsByCategoryIds(categoryIds);
-
   const parentCategory = findParentCategory(tree, category.parentId);
 
   return (
@@ -102,29 +122,7 @@ export default async function CategoryPage({ params }: PageProps) {
 
         <h1 className="text-2xl font-bold mb-6">{category.name}</h1>
 
-        {products.length === 0 ? (
-          <p className="text-text-secondary">Brak produktów w tej kategorii</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((p) => (
-              <div
-                key={p.id}
-                className=" rounded-xl p-4 hover:shadow transition"
-              >
-                <Image
-                  src={"/api/image/" + p.images[0]}
-                  alt="Produkt"
-                  width={200}
-                  height={200}
-                />
-                <p className="font-medium">{p.name}</p>
-                <p className="text-sm text-text-secondary">
-                  {p.price.toFixed(2)} zł
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+        <ProductsInfinite categoryIds={categoryIds} />
       </section>
     </main>
   );
