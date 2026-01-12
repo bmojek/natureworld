@@ -8,6 +8,7 @@ import {
 } from "@/app/lib/category-utils";
 import ProductsInfinite from "./products-infinite";
 import { CategoryModel } from "@/app/models/category";
+import { House } from "lucide-react";
 
 type PageProps = {
   params: Promise<{
@@ -109,10 +110,14 @@ export default async function CategoryPage({ params }: PageProps) {
       {/* ================= PRODUKTY ================= */}
       <section className="md:col-span-3">
         {/* BREADCRUMBS */}
-        <nav className="text-sm text-text-secondary mb-4">
+        <nav className="text-sm text-text-secondary mb-4 flex items-center gap-1">
+          <Link href="/" className="flex items-center">
+            <House size={14} />
+          </Link>
+
           {slug.map((s, i) => (
-            <span key={i}>
-              {" / "}
+            <span key={i} className="flex items-center gap-1">
+              <span>/</span>
               <Link href={`/kategoria/${slug.slice(0, i + 1).join("/")}`}>
                 {s.replaceAll("-", " ")}
               </Link>

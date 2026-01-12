@@ -2,13 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  images: string[];
-};
+import Link from "next/link";
+import { Product } from "@/app/models/product";
 
 export default function ProductsInfinite({
   categoryIds,
@@ -76,20 +71,22 @@ export default function ProductsInfinite({
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((p) => (
-          <div key={p.id} className="p-4  rounded-xl hover:shadow transition">
-            {p.images[0] && (
-              <Image
-                src={`/api/image/${p.images[0]}`}
-                alt={p.name}
-                width={200}
-                height={200}
-              />
-            )}
-            <p className="font-medium">{p.name}</p>
-            <p className="text-sm text-text-secondary">
-              {p.price.toFixed(2)} zł
-            </p>
-          </div>
+          <Link key={p.id} href={`/produkt/${p.slug}`} className="block">
+            <div key={p.id} className="p-4  rounded-xl hover:shadow transition">
+              {p.images[0] && (
+                <Image
+                  src={`/api/image/${p.images[0]}`}
+                  alt={p.name}
+                  width={200}
+                  height={200}
+                />
+              )}
+              <p className="font-medium">{p.name}</p>
+              <p className="text-sm text-text-secondary">
+                {p.price.toFixed(2)} zł
+              </p>
+            </div>
+          </Link>
         ))}
       </div>
 
