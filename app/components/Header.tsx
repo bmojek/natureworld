@@ -5,12 +5,13 @@ import { ShoppingCart, User, Heart, LogOut } from "lucide-react";
 import { useAuth } from "@/app/context/auth-context";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import { useCart } from "../context/cart-context";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
+  const cart = useCart();
   // zamykanie po kliknięciu poza menu
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -44,7 +45,7 @@ export default function Header() {
         />
 
         {/* Menu */}
-        <nav className="flex items-center space-x-4 relative">
+        <nav className="flex items-center space-x-4 relative ">
           {user ? (
             <div className="relative" ref={menuRef}>
               {/* User icon */}
@@ -99,9 +100,10 @@ export default function Header() {
           </button>
 
           <Link
-            href="/cart"
+            href="/koszyk"
             className="text-secondary hover:text-text-main flex items-center gap-1"
           >
+            {cart.items.length > 0 && <p>{cart.items.length}</p>}
             <ShoppingCart size={25} />
           </Link>
         </nav>

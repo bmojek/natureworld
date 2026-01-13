@@ -1,8 +1,10 @@
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
+import { Heart, ShoppingCart, Truck, Leaf, ShieldCheck } from "lucide-react";
+import AddToCartButton from "@/app/components/AddButton";
 
-/* ================= FETCH ================= */
+/* ---------------------------------- API --------------------------------- */
 
 async function fetchProduct(slug: string) {
   const h = await headers();
@@ -17,185 +19,203 @@ async function fetchProduct(slug: string) {
   return res.json();
 }
 
-/* ================= PAGE ================= */
+async function fetchSimilarProducts(categoryIds: string[]) {
+  const h = await headers();
+  const host = h.get("host");
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+
+  const res = await fetch(
+    `${protocol}://${host}/api/products?categories=${categoryIds.join(",")}`,
+    { next: { revalidate: 300 } }
+  );
+
+  if (!res.ok) return [];
+  return res.json();
+}
+
+/* --------------------------------- PAGE --------------------------------- */
 
 export default async function ProductPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
   const product = await fetchProduct(slug);
 
   if (!product) {
-    return <div className="p-12 text-center">Produkt nie znaleziony</div>;
+    return (
+      <div className="p-20 text-center text-text-secondary">
+        Produkt nie znaleziony
+      </div>
+    );
   }
 
-  return (
-    <main className="max-w-7xl mx-auto px-4 py-10">
-      {/* ================= BREADCRUMBS ================= */}
-      <nav className="text-sm text-text-secondary mb-6 flex items-center gap-2">
-        <Link href="/" className="hover:underline">
-          Home
-        </Link>
-        <span>/</span>
-        <span className="font-medium">{product.name}</span>
-      </nav>
+  const similarProducts = [
+    {
+      id: "mock-1",
+      name: "Ekologiczny nawóz uniwersalny",
+      slug: "ekologiczny-nawoz-uniwersalny",
+      price: 29.99,
+      images: ["logo.webp"],
+    },
+    {
+      id: "mock-2",
+      name: "Naturalna ziemia ogrodowa premium",
+      slug: "naturalna-ziemia-ogrodowa-premium",
+      price: 19.99,
+      images: ["logo.webp"],
+    },
+  ];
 
-      {/* ================= GŁÓWNA SEKCJA ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {/* ===== GALERIA ===== */}
-        <div className="space-y-4 md:sticky md:top-24">
-          <div className="relative w-full aspect-square bg-white rounded-2xl border">
-            {product.images?.[0] && (
-              <Image
-                src={`/api/image/${product.images[0]}`}
-                alt={product.name}
-                width={600}
-                height={600}
-                priority
-                className="object-contain p-6"
-              />
-            )}
+  return (
+    <main className="bg-background">
+      {/* ================= HERO ================= */}
+      <section className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 gap-14">
+        {/* GALLERY */}
+        <div>
+          <div className="bg-white  rounded-2xl shadow-sm p-6 flex items-center justify-center">
+            <Image
+              src={`/api/image/${product.images[0]}`}
+              alt={product.name}
+              width={520}
+              height={520}
+              priority
+              className="object-contain"
+            />
           </div>
 
-          {/* MINIATURY */}
-          {product.images?.length > 1 && (
-            <div className="flex gap-3">
-              {product.images.map((img: string, i: number) => (
-                <div
-                  key={i}
-                  className="relative w-20 h-20 bg-white border rounded-xl cursor-pointer hover:ring-2 hover:ring-primary"
-                >
-                  <Image
-                    src={`/api/image/${img}`}
-                    alt=""
-                    fill
-                    className="object-contain p-2"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex gap-3 mt-4">
+            {product.images.map((img: string, i: number) => (
+              <div
+                key={i}
+                className="w-20 h-20 bg-white border rounded-lg hover:border-primary transition flex items-center justify-center"
+              >
+                <Image
+                  src={`/api/image/${img}`}
+                  alt={`${product.name} ${i + 1}`}
+                  width={80}
+                  height={80}
+                  className="object-contain"
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* ===== INFO ===== */}
-        <div className="space-y-6">
-          <h1 className="text-3xl font-bold leading-tight">{product.name}</h1>
+        {/* INFO */}
+        <div className="flex flex-col gap-6">
+          <div className="flex justify-between items-start gap-4">
+            <h1 className="text-4xl font-heading font-semibold text-text-main">
+              {product.name}
+            </h1>
 
-          {/* CENA + STAN */}
-          <div className="flex items-center gap-4">
-            <p className="text-3xl font-semibold text-primary">
-              {product.price.toFixed(2)} zł
-            </p>
-
-            {product.stock > 0 ? (
-              <span className="text-sm text-green-600 font-medium">
-                ● Dostępny
-              </span>
-            ) : (
-              <span className="text-sm text-red-600 font-medium">
-                ● Brak w magazynie
-              </span>
-            )}
+            <button
+              aria-label="Dodaj do ulubionych"
+              className="p-2 rounded-full hover:bg-red-50 transition"
+            >
+              <Heart className="text-red-500" />
+            </button>
           </div>
 
-          {/* OPIS KRÓTKI */}
+          <p className="text-3xl font-bold text-primary">
+            {product.price.toFixed(2)} zł
+          </p>
+
           <p className="text-text-secondary leading-relaxed">
             {product.description}
           </p>
 
-          {/* AKCJE */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              disabled={product.stock <= 0}
-              className="bg-primary text-white px-8 py-4 rounded-full font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Dodaj do koszyka
-            </button>
-
-            <button className="px-8 py-4 rounded-full border font-medium hover:bg-gray-50">
-              ❤ Dodaj do ulubionych
-            </button>
+          <div className="text-sm">
+            {product.stock > 0 ? (
+              <span className="text-primary font-medium">
+                ✔ Dostępny ({product.stock} szt.)
+              </span>
+            ) : (
+              <span className="text-red-500 font-medium">
+                ✖ Brak w magazynie
+              </span>
+            )}
           </div>
 
-          {/* BOX DOSTAWY */}
-          <div className="rounded-xl border bg-green-50 p-4 text-sm space-y-2">
-            <p className="font-medium text-green-700">
-              🚚 Darmowa dostawa od 99 zł
-            </p>
-            <p className="text-text-secondary">
-              Zwrot do 30 dni · wysyłamy kurierem
-            </p>
-          </div>
-
-          {/* INFO TECH */}
-          <div className="pt-6 border-t text-sm text-text-secondary space-y-1">
-            <p>SKU: {product.id}</p>
-            <p>Dostawa: 1–3 dni robocze</p>
-          </div>
+          <AddToCartButton product={product} />
         </div>
-      </div>
+      </section>
 
-      {/* ================= NAJCZĘŚCIEJ KUPOWANE ================= */}
-      <section className="mt-20">
-        <h2 className="text-xl font-semibold mb-6">
-          Najczęściej kupowane razem
-        </h2>
-
-        <div className="flex flex-col md:flex-row items-center gap-6 bg-gray-50 p-6 rounded-xl">
-          <div className="flex items-center gap-4">
-            <Image
-              src={`/api/image/${product.images[0]}`}
-              width={80}
-              height={80}
-              alt=""
-            />
-            <span className="text-xl font-bold">+</span>
-            <div className="w-20 h-20 bg-gray-200 rounded-xl" />
+      {/* ================= DETAILS ================= */}
+      <section className="bg-white border-t">
+        <div className="max-w-5xl mx-auto px-6 py-16 grid gap-12">
+          <div>
+            <h2 className="text-2xl font-heading font-semibold mb-4">
+              Opis produktu
+            </h2>
+            <p className="text-text-secondary leading-relaxed">
+              {product.description}
+            </p>
           </div>
 
-          <div className="md:ml-auto text-right">
-            <p className="font-medium">Razem</p>
-            <p className="text-xl font-semibold text-primary">
-              {(product.price + 9.99).toFixed(2)} zł
-            </p>
-
-            <button className="mt-2 bg-primary text-white px-6 py-2 rounded-full">
-              Dodaj do koszyka
-            </button>
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Dlaczego warto?</h3>
+            <ul className="space-y-2 text-text-secondary">
+              <li className="flex gap-2">
+                <Leaf className="text-primary" /> Naturalne składniki
+              </li>
+              <li className="flex gap-2">
+                <ShieldCheck className="text-primary" /> Produkt premium
+              </li>
+              <li className="flex gap-2">
+                <Truck className="text-primary" /> Szybka wysyłka 24–48h
+              </li>
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* ================= OPIS / TABS ================= */}
-      <section className="mt-20 max-w-4xl space-y-4">
-        <details open className="border rounded-xl p-4">
-          <summary className="font-semibold cursor-pointer">
-            Opis produktu
-          </summary>
-          <p className="mt-3 text-text-secondary">{product.description}</p>
-        </details>
+      {/* ================= BENEFITS ================= */}
+      <section className="bg-background">
+        <div className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
+          {[
+            ["🌱 Ekologiczny wybór", "Bezpieczny dla Ciebie i środowiska"],
+            ["📦 Szybka dostawa", "Wysyłka w 24–48h"],
+            ["⭐ Jakość premium", "Starannie wyselekcjonowane produkty"],
+          ].map(([title, desc]) => (
+            <div key={title} className="bg-white rounded-2xl p-8 shadow-sm">
+              <h3 className="font-semibold text-lg mb-2">{title}</h3>
+              <p className="text-text-secondary">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        <details className="border rounded-xl p-4">
-          <summary className="font-semibold cursor-pointer">
-            Specyfikacja
-          </summary>
-          <ul className="mt-3 text-sm text-text-secondary list-disc pl-5">
-            <li>Materiał: —</li>
-            <li>Wymiary: —</li>
-            <li>Przeznaczenie: —</li>
-          </ul>
-        </details>
+      {/* ================= SIMILAR ================= */}
+      <section className="bg-white border-t">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <h2 className="text-2xl font-heading font-semibold mb-10">
+            Podobne produkty
+          </h2>
 
-        <details className="border rounded-xl p-4">
-          <summary className="font-semibold cursor-pointer">
-            Dostawa i zwroty
-          </summary>
-          <p className="mt-3 text-sm text-text-secondary">
-            Darmowy zwrot do 30 dni. Wysyłka kurierem.
-          </p>
-        </details>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {similarProducts.map((p: any) => (
+              <Link
+                key={p.id}
+                href={`/product/${p.slug}`}
+                className="bg-background rounded-xl p-4 hover:shadow-md transition"
+              >
+                <Image
+                  src={`/api/image/${p.images[0]}`}
+                  alt={p.name}
+                  width={200}
+                  height={200}
+                  className="h-40 mx-auto object-contain"
+                />
+                <h3 className="mt-4 font-medium text-text-main">{p.name}</h3>
+                <p className="text-primary font-semibold mt-1">
+                  {p.price.toFixed(2)} zł
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
     </main>
   );

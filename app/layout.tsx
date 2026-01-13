@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Poppins, Roboto } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/auth-context";
+import { Car } from "lucide-react";
+import { CartProvider } from "./context/cart-context";
+
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
@@ -27,7 +30,9 @@ export default function RootLayout({
   return (
     <html lang="pl">
       <body className={`${poppins.variable} ${roboto.variable} antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+        <CartProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </CartProvider>
       </body>
     </html>
   );
