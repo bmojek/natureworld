@@ -8,7 +8,7 @@
   --color-primary: #2f7d32; /* Zieleń – CTA, nagłówki */
   --color-secondary: #6d6d6d; /* Szary – tekst mniej ważny */
   --color-accent: #ffb300; /* Żółty – hover / CTA */
-  --color-background: #f5f3ee; /* Jasne tło strony */
+  --color-background: #ffffff; /* Jasne tło strony */
   --color-text-main: #1b1b1b; /* Główny tekst */
   --color-text-secondary: #666666; /* Opisy, meta, mniejsze teksty */
   --font-sans: "Roboto", sans-serif;
@@ -32,13 +32,13 @@
 }
 
 html[data-theme="dark"] {
-  --color-background: #f5f3ee;
+  --color-background: #ffffff;
   --color-text-main: #1b1b1b;
   --color-text-secondary: #666666;
 }
 
 html[data-theme="light"] {
-  --color-background: #f5f3ee;
+  --color-background: #ffffff;
   --color-text-main: #1b1b1b;
   --color-text-secondary: #666666;
 }

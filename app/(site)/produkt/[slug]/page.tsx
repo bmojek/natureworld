@@ -74,7 +74,7 @@ export default async function ProductPage({
       <section className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 gap-14">
         {/* GALLERY */}
         <div>
-          <div className="bg-white  rounded-2xl shadow-sm p-6 flex items-center justify-center">
+          <div className="bg-white  rounded-2xl  p-6 flex items-center justify-center">
             <Image
               src={`/api/image/${product.images[0]}`}
               alt={product.name}

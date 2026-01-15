@@ -16,7 +16,7 @@ export default function AddToCartButton({ product }: { product: any }) {
           qty: 1,
         })
       }
-      className="bg-primary text-white px-8 py-4 rounded-full font-semibold"
+      className="bg-primary text-white px-8 py-4 rounded-full font-semibold cursor-pointer hover:opacity-90 transition"
     >
       Dodaj do koszyka
     </button>
