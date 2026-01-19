@@ -18,8 +18,8 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Nature-World - sklep zoologiczno-ogrodniczy",
-  description: "NatureWorld - sklep zoologiczno-ogrodniczy",
+  title: "Nature-World - Sklep Ogrodniczo-Zoologiczny",
+  description: "Nature-World - Sklep Ogrodniczo-Zoologiczny",
 };
 
 export default function RootLayout({
