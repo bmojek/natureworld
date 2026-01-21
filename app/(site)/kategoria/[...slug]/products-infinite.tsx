@@ -11,20 +11,28 @@ export default function ProductsInfinite({
   categoryIds: string[];
 }) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [cursor, setCursor] = useState<number | null>(null);
+  const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [end, setEnd] = useState(false);
+  const [sort, setSort] = useState("newest");
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const load = async () => {
-    if (loading || end) return;
+  /* ================= LOAD ================= */
+
+  const load = async (reset = false) => {
+    if (loading) return;
+    if (!reset && end) return;
 
     setLoading(true);
 
     const url = new URL("/api/products", window.location.origin);
     url.searchParams.set("categoryIds", categoryIds.join(","));
-    if (cursor) url.searchParams.set("cursor", cursor.toString());
+    url.searchParams.set("sort", sort);
+
+    if (cursor && !reset) {
+      url.searchParams.set("cursor", cursor);
+    }
 
     const res = await fetch(url.toString());
     const data = await res.json();
@@ -33,47 +41,74 @@ export default function ProductsInfinite({
       setEnd(true);
     } else {
       setProducts((prev) => {
-        const map = new Map(prev.map((p) => [p.id, p]));
-        data.products.forEach((p: any) => map.set(p.id, p));
-        return Array.from(map.values());
-      });
+        if (reset) return data.products;
 
+        const existingIds = new Set(prev.map((p) => p.id));
+
+        const uniqueNew = data.products.filter(
+          (p: Product) => !existingIds.has(p.id),
+        );
+
+        return [...prev, ...uniqueNew];
+      });
       setCursor(data.cursor);
     }
 
     setLoading(false);
   };
 
-  // 🔹 pierwsze ładowanie
+  /* ================= INITIAL LOAD ================= */
+
   useEffect(() => {
-    load();
+    load(true);
   }, []);
 
-  // 🔹 infinite scroll
+  /* ================= SORT CHANGE ================= */
+
   useEffect(() => {
-    if (!sentinelRef.current) return;
+    setProducts([]);
+    setCursor(null);
+    setEnd(false);
+    load(true);
+  }, [sort]);
+
+  /* ================= INFINITE SCROLL ================= */
+
+  useEffect(() => {
+    if (!sentinelRef.current || end) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          load();
-        }
+        if (entries[0].isIntersecting) load();
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
 
     observer.observe(sentinelRef.current);
-
     return () => observer.disconnect();
-  }, [sentinelRef.current, cursor, end]);
+  }, [cursor, end]);
 
   return (
     <>
+      {/* SORT */}
+      <div className="mb-4 flex justify-end">
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className="border rounded px-3 py-2 text-sm"
+        >
+          <option value="newest">Najnowsze</option>
+          <option value="price-asc">Cena rosnąco</option>
+          <option value="price-desc">Cena malejąco</option>
+        </select>
+      </div>
+
+      {/* PRODUCTS */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((p) => (
-          <Link key={p.id} href={`/produkt/${p.slug}`} className="block">
-            <div key={p.id} className="p-4  rounded-xl hover:shadow transition">
-              {p.images[0] && (
+          <Link key={p.id} href={`/produkt/${p.slug}`}>
+            <div className="border rounded-xl p-4 hover:shadow transition">
+              {p.images?.[0] && (
                 <Image
                   src={`/api/image/${p.images[0]}`}
                   alt={p.name}
@@ -90,10 +125,9 @@ export default function ProductsInfinite({
         ))}
       </div>
 
-      {/* sentinel */}
       {!end && (
         <div ref={sentinelRef} className="h-10 mt-10 flex justify-center">
-          {loading && <p>Ładowanie...</p>}
+          {loading && <p>Ładowanie…</p>}
         </div>
       )}
     </>

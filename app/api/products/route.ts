@@ -7,7 +7,6 @@ import {
   orderBy,
   limit,
   startAfter,
-  Timestamp,
 } from "firebase/firestore";
 import { db } from "@/app/lib/firebase";
 
@@ -18,42 +17,67 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
 
     const categoryIdsParam = searchParams.get("categoryIds");
-    const cursorParam = searchParams.get("cursor");
+    const cursorId = searchParams.get("cursor"); // doc.id
+    const sort = searchParams.get("sort") ?? "newest";
 
     if (!categoryIdsParam) {
       return NextResponse.json(
         { products: [], cursor: null },
-        {
-          headers: {
-            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-          },
-        }
+        { headers: { "Cache-Control": "public, s-maxage=60" } },
       );
     }
 
     const categoryIds = categoryIdsParam.split(",");
 
-    let q = query(
-      collection(db, "products"),
-      where("categoryIds", "array-contains-any", categoryIds.slice(0, 10)),
-      orderBy("createdAt", "desc"),
-      orderBy("__name__"),
-      limit(PAGE_SIZE)
-    );
+    /* ================= SORT ================= */
 
-    if (cursorParam) {
-      const cursorTs = Timestamp.fromMillis(Number(cursorParam));
-      q = query(
-        collection(db, "products"),
-        where("categoryIds", "array-contains-any", categoryIds.slice(0, 10)),
-        orderBy("createdAt", "desc"),
-        orderBy("__name__"),
-        startAfter(cursorTs),
-        limit(PAGE_SIZE)
-      );
+    let orderField: "createdAt" | "price" = "createdAt";
+    let orderDir: "asc" | "desc" = "desc";
+
+    if (sort === "price-asc") {
+      orderField = "price";
+      orderDir = "asc";
     }
 
-    const snap = await getDocs(q);
+    if (sort === "price-desc") {
+      orderField = "price";
+      orderDir = "desc";
+    }
+
+    /* ================= BASE QUERY ================= */
+
+    let baseQuery = query(
+      collection(db, "products"),
+      where("categoryIds", "array-contains-any", categoryIds.slice(0, 10)),
+      orderBy(orderField, orderDir),
+      orderBy("__name__"),
+      limit(PAGE_SIZE),
+    );
+
+    /* ================= CURSOR ================= */
+
+    if (cursorId) {
+      const cursorSnap = await getDocs(
+        query(collection(db, "products"), where("__name__", "==", cursorId)),
+      );
+
+      if (!cursorSnap.empty) {
+        const lastDoc = cursorSnap.docs[0];
+
+        baseQuery = query(
+          collection(db, "products"),
+          where("categoryIds", "array-contains-any", categoryIds.slice(0, 10)),
+          orderBy(orderField, orderDir),
+          orderBy("__name__"),
+          startAfter(lastDoc),
+          limit(PAGE_SIZE),
+        );
+      }
+    }
+
+    /* ================= FETCH ================= */
+
+    const snap = await getDocs(baseQuery);
 
     const products = snap.docs.map((doc) => {
       const d = doc.data();
@@ -63,34 +87,27 @@ export async function GET(req: NextRequest) {
         slug: d.slug,
         price: d.price,
         images: d.images ?? [],
-        createdAt: d.createdAt?.seconds ? d.createdAt.seconds * 1000 : 0,
       };
     });
 
-    const last = snap.docs.at(-1);
+    const lastDoc = snap.docs.at(-1);
 
     return NextResponse.json(
       {
         products,
-        cursor: last?.data().createdAt?.seconds
-          ? last.data().createdAt.seconds * 1000
-          : null,
+        cursor: lastDoc ? lastDoc.id : null,
       },
       {
         headers: {
           "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
         },
-      }
+      },
     );
   } catch (err) {
     console.error("API /products error:", err);
     return NextResponse.json(
       { products: [], cursor: null },
-      {
-        headers: {
-          "Cache-Control": "no-store",
-        },
-      }
+      { headers: { "Cache-Control": "no-store" } },
     );
   }
 }

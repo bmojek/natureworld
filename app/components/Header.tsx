@@ -32,7 +32,7 @@ export default function Header() {
   return (
     <>
       {/* ================= HEADER TOP ================= */}
-      <header className="shadow-md bg-white relative z-50">
+      <header className="shadow-md bg-background relative z-50">
         <div className="max-w-7xl mx-auto flex items-center gap-4 px-4 py-3">
           {/* ===== MOBILE HAMBURGER ===== */}
           <button
