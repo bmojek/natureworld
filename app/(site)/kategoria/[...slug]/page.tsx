@@ -55,7 +55,7 @@ export default async function CategoryPage({ params }: PageProps) {
   const parentCategory = findParentCategory(tree, category.parentId);
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+    <main className="max-w-7xl min-h-screen mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-4 gap-8">
       {/* ================= SIDEBAR ================= */}
       <aside className="space-y-8">
         {/* KATEGORIE */}
@@ -97,7 +97,7 @@ export default async function CategoryPage({ params }: PageProps) {
 
           <div className="mb-4">
             <p className="font-medium mb-2">Cena</p>
-            <input type="range" min={0} max={500} className="w-full" />
+            <input type="range" min={0} max={500} className="w-full " />
           </div>
 
           <label className="flex items-center gap-2">

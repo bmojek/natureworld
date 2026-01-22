@@ -23,10 +23,10 @@ export default function CartPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-10">
+    <main className="max-w-7xl min-h-screen mx-auto px-4 py-8 flex flex-col lg:flex-row gap-10">
       {/* ================= LEFT ================= */}
       <section className="flex-1 space-y-6">
-        <h1 className="text-2xl font-bold">Koszyk</h1>
+        <h1 className="text-2xl font-bold">Zawartość Twojego Koszyka</h1>
 
         {/* INFO */}
         <div className="bg-primary/10 rounded-xl p-4 text-sm">
@@ -41,14 +41,15 @@ export default function CartPage() {
               className="flex items-center gap-4 py-4 px-2"
             >
               {/* IMAGE */}
-              <Image
-                src={`/api/image/${item.image}`}
-                alt={item.name}
-                width={80}
-                height={80}
-                className="object-contain"
-              />
-
+              <Link href={`/produkt/${item.slug}`} className="w-20 h-20">
+                <Image
+                  src={`/api/image/${item.image + "_thumb.webp"}`}
+                  alt={item.name}
+                  width={80}
+                  height={80}
+                  className="object-contain"
+                />
+              </Link>
               {/* NAME */}
               <div className="flex-1">
                 <p className="font-medium">{item.name}</p>

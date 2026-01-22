@@ -8,6 +8,7 @@ type CartContextType = {
   addItem: (item: CartItem) => void;
   removeItem: (productId: string) => void;
   updateQty: (productId: string, qty: number) => void;
+
   total: number;
 };
 
@@ -32,7 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const found = prev.find((p) => p.productId === item.productId);
       if (found) {
         return prev.map((p) =>
-          p.productId === item.productId ? { ...p, qty: p.qty + item.qty } : p
+          p.productId === item.productId ? { ...p, qty: p.qty + item.qty } : p,
         );
       }
       return [...prev, item];
@@ -45,7 +46,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const updateQty = (productId: string, qty: number) => {
     setItems((prev) =>
-      prev.map((p) => (p.productId === productId ? { ...p, qty } : p))
+      prev.map((p) => (p.productId === productId ? { ...p, qty } : p)),
     );
   };
 

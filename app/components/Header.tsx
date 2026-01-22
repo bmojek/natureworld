@@ -17,7 +17,11 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const userRef = useRef<HTMLDivElement>(null);
+  const adminAccounts =
+    process.env.NEXT_PUBLIC_ADMINACCOUNTS?.split(",").map((e) => e.trim()) ??
+    [];
 
+  const isAdmin = adminAccounts.includes(user?.email ?? "");
   /* ===== zamykanie dropdowna usera ===== */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -74,31 +78,59 @@ export default function Header() {
                 </button>
 
                 {userOpen && (
-                  <div className="absolute right-0 mt-3 w-48 bg-white border rounded-xl shadow-lg overflow-hidden">
-                    <Link
-                      href="/profil"
-                      className="block px-4 py-3 text-sm hover:bg-gray-100"
-                      onClick={() => setUserOpen(false)}
-                    >
-                      Profil
-                    </Link>
-                    <Link
-                      href="/zamowienia"
-                      className="block px-4 py-3 text-sm hover:bg-gray-100"
-                      onClick={() => setUserOpen(false)}
-                    >
-                      Zamówienia
-                    </Link>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setUserOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-2"
-                    >
-                      <LogOut size={16} />
-                      Wyloguj
-                    </button>
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-lg border shadow-xl border-black/5 overflow-hidden animate-in fade-in zoom-in-95">
+                    {/* HEADER */}
+                    <div className="px-4 py-3 border-b ">
+                      <p className="text-sm font-medium text-text-main">
+                        Moje konto
+                      </p>
+                      <p className="text-xs text-text-secondary truncate">
+                        {user.email}
+                      </p>
+                    </div>
+
+                    {/* LINKS */}
+                    <div className="py-1">
+                      <Link
+                        href="/profil"
+                        onClick={() => setUserOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-primary/10 hover:text-primary transition"
+                      >
+                        <User size={16} />
+                        Profil
+                      </Link>
+
+                      <Link
+                        href="/zamowienia"
+                        onClick={() => setUserOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-primary/10 hover:text-primary transition"
+                      >
+                        📦 Zamówienia
+                      </Link>
+                      {isAdmin && (
+                        <Link
+                          href="/adminpanel"
+                          onClick={() => setUserOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-primary/10 hover:text-primary transition"
+                        >
+                          🛠️ Panel administracyjny
+                        </Link>
+                      )}
+                    </div>
+
+                    {/* FOOTER */}
+                    <div className="border-t">
+                      <button
+                        onClick={() => {
+                          logout();
+                          setUserOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition"
+                      >
+                        <LogOut size={16} />
+                        Wyloguj
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

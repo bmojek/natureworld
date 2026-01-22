@@ -1,10 +1,11 @@
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingCart, Truck, Leaf, ShieldCheck } from "lucide-react";
+import { Heart, Truck, ShieldCheck } from "lucide-react";
 import AddToCartButton from "@/app/components/AddButton";
+import { Product } from "@/app/models/product";
 
-/* ---------------------------------- API --------------------------------- */
+/* ================= API ================= */
 
 async function fetchProduct(slug: string) {
   const h = await headers();
@@ -19,21 +20,7 @@ async function fetchProduct(slug: string) {
   return res.json();
 }
 
-async function fetchSimilarProducts(categoryIds: string[]) {
-  const h = await headers();
-  const host = h.get("host");
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-
-  const res = await fetch(
-    `${protocol}://${host}/api/products?categories=${categoryIds.join(",")}`,
-    { next: { revalidate: 300 } }
-  );
-
-  if (!res.ok) return [];
-  return res.json();
-}
-
-/* --------------------------------- PAGE --------------------------------- */
+/* ================= PAGE ================= */
 
 export default async function ProductPage({
   params,
@@ -41,7 +28,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await fetchProduct(slug);
+  const product: Product = await fetchProduct(slug);
 
   if (!product) {
     return (
@@ -51,32 +38,17 @@ export default async function ProductPage({
     );
   }
 
-  const similarProducts = [
-    {
-      id: "mock-1",
-      name: "Ekologiczny nawóz uniwersalny",
-      slug: "ekologiczny-nawoz-uniwersalny",
-      price: 29.99,
-      images: ["logo.webp"],
-    },
-    {
-      id: "mock-2",
-      name: "Naturalna ziemia ogrodowa premium",
-      slug: "naturalna-ziemia-ogrodowa-premium",
-      price: 19.99,
-      images: ["logo.webp"],
-    },
-  ];
+  const { attributes = {}, nutrition = {} } = product;
 
   return (
     <main className="bg-background">
       {/* ================= HERO ================= */}
-      <section className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 gap-14">
+      <section className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-2 gap-14">
         {/* GALLERY */}
         <div>
-          <div className="bg-white  rounded-2xl  p-6 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-6 flex items-center justify-center">
             <Image
-              src={`/api/image/${product.images[0]}`}
+              src={`/api/image/${product.images[0] + "_main.webp"}`}
               alt={product.name}
               width={520}
               height={520}
@@ -85,28 +57,30 @@ export default async function ProductPage({
             />
           </div>
 
-          <div className="flex gap-3 mt-4">
-            {product.images.map((img: string, i: number) => (
-              <div
-                key={i}
-                className="w-20 h-20 bg-white border rounded-lg hover:border-primary transition flex items-center justify-center"
-              >
-                <Image
-                  src={`/api/image/${img}`}
-                  alt={`${product.name} ${i + 1}`}
-                  width={80}
-                  height={80}
-                  className="object-contain"
-                />
-              </div>
-            ))}
-          </div>
+          {product.images.length > 1 && (
+            <div className="flex gap-3 mt-4">
+              {product.images.map((img: string, i: number) => (
+                <div
+                  key={i}
+                  className="w-20 h-20 bg-white  rounded-lg hover:border-primary transition flex items-center justify-center"
+                >
+                  <Image
+                    src={`/api/image/${img + "_thumb.webp"}`}
+                    alt={`${product.name} ${i + 1}`}
+                    width={80}
+                    height={80}
+                    className="object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* INFO */}
         <div className="flex flex-col gap-6">
           <div className="flex justify-between items-start gap-4">
-            <h1 className="text-4xl font-heading font-semibold text-text-main">
+            <h1 className="text-4xl font-semibold text-text-main">
               {product.name}
             </h1>
 
@@ -118,12 +92,14 @@ export default async function ProductPage({
             </button>
           </div>
 
+          {product.shortDescription && (
+            <p className="text-text-secondary text-lg">
+              {product.shortDescription}
+            </p>
+          )}
+
           <p className="text-3xl font-bold text-primary">
             {product.price.toFixed(2)} zł
-          </p>
-
-          <p className="text-text-secondary leading-relaxed">
-            {product.description}
           </p>
 
           <div className="text-sm">
@@ -139,84 +115,97 @@ export default async function ProductPage({
           </div>
 
           <AddToCartButton product={product} />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-text-secondary mt-4">
+            <div className="flex gap-2 items-center">
+              <Truck size={16} /> Wysyłka 24–48h
+            </div>
+            <div className="flex gap-2 items-center">
+              <ShieldCheck size={16} /> Gwarancja jakości
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ================= DETAILS ================= */}
       <section className="bg-white border-t">
-        <div className="max-w-5xl mx-auto px-6 py-16 grid gap-12">
-          <div>
-            <h2 className="text-2xl font-heading font-semibold mb-4">
-              Opis produktu
-            </h2>
-            <p className="text-text-secondary leading-relaxed">
-              {product.description}
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-semibold mb-3">Dlaczego warto?</h3>
-            <ul className="space-y-2 text-text-secondary">
-              <li className="flex gap-2">
-                <Leaf className="text-primary" /> Naturalne składniki
-              </li>
-              <li className="flex gap-2">
-                <ShieldCheck className="text-primary" /> Produkt premium
-              </li>
-              <li className="flex gap-2">
-                <Truck className="text-primary" /> Szybka wysyłka 24–48h
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= BENEFITS ================= */}
-      <section className="bg-background">
-        <div className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
-          {[
-            ["🌱 Ekologiczny wybór", "Bezpieczny dla Ciebie i środowiska"],
-            ["📦 Szybka dostawa", "Wysyłka w 24–48h"],
-            ["⭐ Jakość premium", "Starannie wyselekcjonowane produkty"],
-          ].map(([title, desc]) => (
-            <div key={title} className="bg-white rounded-2xl p-8 shadow-sm">
-              <h3 className="font-semibold text-lg mb-2">{title}</h3>
-              <p className="text-text-secondary">{desc}</p>
+        <div className="max-w-5xl mx-auto px-6 py-16 space-y-14">
+          {/* DESCRIPTION */}
+          {product.description && (
+            <div>
+              <h2 className="text-2xl font-semibold mb-4">Opis produktu</h2>
+              <p className="text-text-secondary leading-relaxed">
+                {product.description}
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
+          )}
 
-      {/* ================= SIMILAR ================= */}
-      <section className="bg-white border-t">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <h2 className="text-2xl font-heading font-semibold mb-10">
-            Podobne produkty
-          </h2>
+          {/* ATTRIBUTES */}
+          {Object.keys(attributes).length > 0 && (
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Specyfikacja</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                {attributes.weightKg && (
+                  <Spec label="Waga" value={`${attributes.weightKg} kg`} />
+                )}
+                {attributes.lengthCm && (
+                  <Spec label="Długość" value={`${attributes.lengthCm} cm`} />
+                )}
+                {attributes.widthCm && (
+                  <Spec label="Szerokość" value={`${attributes.widthCm} cm`} />
+                )}
+                {attributes.heightCm && (
+                  <Spec label="Wysokość" value={`${attributes.heightCm} cm`} />
+                )}
+                {attributes.material && (
+                  <Spec label="Materiał" value={attributes.material} />
+                )}
+                {attributes.flavor && (
+                  <Spec label="Smak" value={attributes.flavor} />
+                )}
+                {attributes.ageGroup && (
+                  <Spec label="Wiek" value={attributes.ageGroup} />
+                )}
+              </div>
+            </div>
+          )}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {similarProducts.map((p: any) => (
-              <Link
-                key={p.id}
-                href={`/product/${p.slug}`}
-                className="bg-background rounded-xl p-4 hover:shadow-md transition"
-              >
-                <Image
-                  src={`/api/image/${p.images[0]}`}
-                  alt={p.name}
-                  width={200}
-                  height={200}
-                  className="h-40 mx-auto object-contain"
-                />
-                <h3 className="mt-4 font-medium text-text-main">{p.name}</h3>
-                <p className="text-primary font-semibold mt-1">
-                  {p.price.toFixed(2)} zł
-                </p>
-              </Link>
-            ))}
-          </div>
+          {/* NUTRITION */}
+          {Object.keys(nutrition).length > 0 && (
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Wartości odżywcze</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                {nutrition.protein && (
+                  <Spec label="Białko" value={`${nutrition.protein}%`} />
+                )}
+                {nutrition.fat && (
+                  <Spec label="Tłuszcz" value={`${nutrition.fat}%`} />
+                )}
+                {nutrition.fiber && (
+                  <Spec label="Błonnik" value={`${nutrition.fiber}%`} />
+                )}
+                {nutrition.ash && (
+                  <Spec label="Popiół" value={`${nutrition.ash}%`} />
+                )}
+                {nutrition.moisture && (
+                  <Spec label="Wilgotność" value={`${nutrition.moisture}%`} />
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </main>
+  );
+}
+
+/* ================= HELPERS ================= */
+
+function Spec({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between border-b pb-2">
+      <span className="text-text-secondary">{label}</span>
+      <span className="font-medium text-text-main">{value}</span>
+    </div>
   );
 }

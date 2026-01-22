@@ -10,7 +10,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/app/lib/firebase";
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 6;
 
 export async function GET(req: NextRequest) {
   try {

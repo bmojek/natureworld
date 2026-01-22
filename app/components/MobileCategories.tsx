@@ -21,7 +21,7 @@ export default function MobileCategories({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/40">
       {/* PANEL */}
-      <div className="absolute left-0 top-0 h-full w-80 bg-white shadow-xl p-4 overflow-y-auto">
+      <div className="absolute left-0 top-0 h-full w-80 bg-background shadow-xl p-4 overflow-y-auto">
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <p className="text-lg font-semibold">Kategorie</p>

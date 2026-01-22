@@ -3,8 +3,9 @@
 import { useCart } from "@/app/context/cart-context";
 import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
+import { Product } from "@/app/models/product";
 
-export default function AddToCartButton({ product }: { product: any }) {
+export default function AddToCartButton({ product }: { product: Product }) {
   const { addItem } = useCart();
   const [state, setState] = useState<"idle" | "adding" | "added">("idle");
 
@@ -18,6 +19,7 @@ export default function AddToCartButton({ product }: { product: any }) {
       name: product.name,
       price: product.price,
       image: product.images[0],
+      slug: product.slug,
       qty: 1,
     });
 
