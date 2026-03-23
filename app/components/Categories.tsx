@@ -77,6 +77,14 @@ export default function Categories() {
             )}
           </li>
         ))}
+        <li>
+          <Link
+            href={`/aktualnosci`}
+            className="block px-4 py-3 font-bold text-white hover:bg-green-800 rounded"
+          >
+            Aktualności
+          </Link>
+        </li>
       </ul>
     </nav>
   );

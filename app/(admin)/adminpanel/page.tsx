@@ -3,9 +3,10 @@
 import { useState } from "react";
 import ProductsForm from "./products-form";
 import CategoriesForm from "./categories-form";
+import PostsForm from "./posts-form";
 import { useAuth } from "@/app/context/auth-context";
 
-type Tab = "products" | "categories";
+type Tab = "products" | "categories" | "posts";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("products");
@@ -44,11 +45,22 @@ export default function AdminPage() {
         >
           Kategorie
         </button>
+        <button
+          onClick={() => setTab("posts")}
+          className={`pb-2 font-medium ${
+            tab === "posts"
+              ? "border-b-2 border-primary text-primary"
+              : "text-text-secondary"
+          }`}
+        >
+          Posty
+        </button>
       </div>
 
       {/* CONTENT */}
       {tab === "products" && <ProductsForm />}
       {tab === "categories" && <CategoriesForm />}
+      {tab === "posts" && <PostsForm />}
     </main>
   );
 }
