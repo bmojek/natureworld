@@ -65,7 +65,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             flex-col
             w-1/2 md:w-full
             p-4 md:p-5
-            min-h-[200px]
+            min-h-50
           "
         >
           {/* NAME */}

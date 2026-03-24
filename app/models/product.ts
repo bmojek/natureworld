@@ -4,7 +4,7 @@ export interface Product {
   slug: string;
   price: number;
   categoryIds: string[];
-
+  sku?: string;
   description?: string;
   shortDescription?: string;
 

@@ -2,12 +2,8 @@
 
 import { useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-
 import { db } from "@/app/lib/firebase";
-
 import { uploadPostImagesToR2 } from "@/app/lib/upload-post-images";
-
-import { uploadImagesToR2 } from "@/app/lib/upload-images";
 import PostImageUploader from "@/app/components/ImageUploader/PostImageUploader";
 import { PostImage } from "@/app/components/ImageUploader/post-types";
 function slugify(text: string) {

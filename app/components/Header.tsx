@@ -8,7 +8,7 @@ import { useCart } from "@/app/context/cart-context";
 import { useEffect, useRef, useState } from "react";
 import Categories from "./Categories";
 import MobileCategories from "./MobileCategories";
-
+import { Search } from "lucide-react";
 export default function Header() {
   const { user, logout } = useAuth();
   const cart = useCart();
@@ -59,11 +59,27 @@ export default function Header() {
           </Link>
 
           {/* ===== SEARCH (desktop) ===== */}
-          <input
-            type="text"
-            placeholder="Szukaj produktów…"
-            className="hidden md:block max-w-2xl mx-auto flex-1 bg-[#d2dad7] border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          <div className="hidden md:flex flex-1 max-w-2xl mx-auto">
+            <div className="flex w-full border border-black/10 bg-background rounded-md overflow-hidden">
+              <input
+                type="text"
+                placeholder="Szukaj produktów..."
+                className="flex-1 px-3 py-2 text-sm outline-none"
+              />
+
+              <button
+                className="
+        px-3
+        border-l
+        border-black/10
+        text-text-secondary
+        hover:text-primary
+      "
+              >
+                <Search size={18} />
+              </button>
+            </div>
+          </div>
 
           {/* ===== ICONS ===== */}
           <nav className="flex items-center gap-4 ml-auto relative">

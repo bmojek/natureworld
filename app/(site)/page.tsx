@@ -5,17 +5,29 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import ProductRow from "@/app/components/ProductRow";
 import PostsSnippet from "@/app/components/PostsSnippet";
-
+import { Product } from "@/app/models/product";
 /* ================= KARUZELA ================= */
 
-const banners = ["baner.webp", "bilbord.webp", "banner-hero.webp"];
+const banners = ["bilbordsharp.webp", "banerwide2.webp"];
 
-const demoProducts = Array.from({ length: 10 }).map((_, i) => ({
+const demoProducts: Product[] = Array.from({ length: 4 }).map((_, i) => ({
   id: String(i),
+
   name: `Produkt ${i + 1}`,
-  price: 19.99 + i,
-  image: "logo.webp",
+
   slug: "przykladowy-produkt",
+
+  price: 19.99 + i,
+
+  images: ["grabki-szerokie-113x392-cm-geolia-n1_0"],
+
+  categoryIds: [],
+
+  stock: 10,
+
+  isActive: true,
+
+  createdAt: new Date(),
 }));
 
 function BannerCarousel() {
@@ -32,8 +44,7 @@ function BannerCarousel() {
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden">
-      {/* ratio jak w sklepach */}
+    <section className="relative w-full overflow-hidden bg-background">
       <div className="relative w-full aspect-3/1 sm:aspect-5/2 md:aspect-16/5">
         {banners.map((img, i) => (
           <Image
@@ -43,135 +54,105 @@ function BannerCarousel() {
             fill
             priority={i === 0}
             sizes="100vw"
-            className={`
-              object-contain
-              absolute inset-0
-              transition-opacity duration-700
-              ${i === index ? "opacity-100" : "opacity-0"}
-            `}
+            className={`object-contain absolute inset-0 transition-opacity duration-700 ${
+              i === index ? "opacity-100" : "opacity-0"
+            }`}
           />
         ))}
       </div>
-
-      {/* dots */}
-      {banners.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {banners.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setIndex(i)}
-              className={`w-3 h-3 rounded-full ${
-                i === index ? "bg-primary" : "border border-primary"
-              }`}
-            />
-          ))}
-        </div>
-      )}
     </section>
   );
 }
+
 /* ================= HOME ================= */
 
 export default function Home() {
   return (
     <main>
-      {/* FULL WIDTH BANNER */}
+      {/* ===== BANNER ===== */}
+
       <BannerCarousel />
 
-      {/* CONTENT CONTAINER */}
-      <div className="max-w-7xl mx-auto px-4 pt-10 space-y-16">
-        {/* HERO */}
-        <section className="flex flex-col items-center text-center gap-6">
-          <h1 className="text-4xl font-bold">
-            Wszystko dla zwierząt i ogrodu 🌿
+      {/* ===== CONTENT ===== */}
+
+      <div className="max-w-7xl mx-auto px-4 py-10 space-y-10">
+        {/* ================= HERO ================= */}
+
+        <section className="text-center space-y-4">
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+            Wszystko dla zwierząt i ogrodu
           </h1>
 
-          <p className="text-text-secondary max-w-xl">
-            Sklep zoologiczno-ogrodniczy – karma, akcesoria i naturalne
-            rozwiązania
+          <p className="text-text-secondary max-w-2xl mx-auto">
+            Sklep zoologiczno-ogrodniczy – karma, akcesoria, nawozy, rośliny i
+            naturalne rozwiązania dla domu i ogrodu
           </p>
 
-          <div className="flex gap-4">
+          <div className="flex justify-center gap-4 pt-2">
             <Link
               href="/kategoria/ogrod"
-              className="bg-primary text-white px-6 py-3 rounded-full font-semibold"
+              className="bg-primary text-white px-6 py-3 font-medium"
             >
               Ogród
             </Link>
 
             <Link
               href="/kategoria/zwierzeta"
-              className="border px-6 py-3 rounded-full font-semibold"
+              className="border px-6 py-3 font-medium"
             >
               Zwierzęta
             </Link>
           </div>
         </section>
+
+        {/* ================= NEWS ================= */}
+
         <PostsSnippet />
-        {/* POLECANE */}
-        <section>
-          <h2 className="text-xl font-semibold mb-6">Polecane produkty</h2>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Link
-                key={i}
-                href="/produkt/przykladowy-produkt"
-                className="border rounded-xl p-4 hover:shadow transition flex flex-col"
-              >
-                <div className="relative w-full aspect-square mb-3">
-                  <Image
-                    src="/api/image/logo.webp"
-                    alt="Produkt"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-
-                <p className="font-medium">Produkt {i}</p>
-
-                <p className="text-text-secondary text-sm">99,00 zł</p>
-              </Link>
-            ))}
-          </div>
-        </section>
+        {/* ================= FEATURED ================= */}
 
         <ProductRow
-          title="Dla psa 🐶"
+          title="Promocje"
+          href="/kategoria/promocje"
+          products={demoProducts}
+        />
+
+        {/* ================= ROWS ================= */}
+
+        <ProductRow
+          title="Dla psa"
           href="/kategoria/psy"
           products={demoProducts}
         />
 
         <ProductRow
-          title="Dla kota 🐱"
+          title="Dla kota"
           href="/kategoria/koty"
           products={demoProducts}
         />
 
         <ProductRow
-          title="Ogród 🌿"
+          title="Ogród"
           href="/kategoria/ogrodniczy"
           products={demoProducts}
         />
 
-        {/* USP */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-          <div className="border rounded-xl p-6">
-            🚚
-            <p className="font-semibold mt-2">Darmowa dostawa</p>
+        {/* ================= USP ================= */}
+
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center border-t pt-10">
+          <div>
+            <p className="text-lg font-semibold">Darmowa dostawa</p>
             <p className="text-sm text-text-secondary">od 99 zł</p>
           </div>
 
-          <div className="border rounded-xl p-6">
-            🔄
-            <p className="font-semibold mt-2">30 dni na zwrot</p>
+          <div>
+            <p className="text-lg font-semibold">30 dni na zwrot</p>
             <p className="text-sm text-text-secondary">bez problemu</p>
           </div>
 
-          <div className="border rounded-xl p-6">
-            🌿
-            <p className="font-semibold mt-2">Naturalne produkty</p>
-            <p className="text-sm text-text-secondary">dla zwierząt</p>
+          <div>
+            <p className="text-lg font-semibold">Naturalne produkty</p>
+            <p className="text-sm text-text-secondary">dla zwierząt i ogrodu</p>
           </div>
         </section>
       </div>

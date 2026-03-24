@@ -32,42 +32,52 @@ export default function PostsSnippet({
   if (!posts.length) return null;
 
   return (
-    <section>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold">{title}</h2>
+    <section className="space-y-6">
+      {/* HEADER */}
 
-        <Link href={href} className="text-primary text-sm font-medium">
-          Zobacz wszystkie →
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">{title}</h2>
+
+        <Link href={href} className="text-sm text-primary hover:underline">
+          Zobacz wszystkie
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      {/* LIST */}
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
         {posts.slice(0, 3).map((post) => (
           <Link
             key={post.id}
-            href={`${href}/${post.slug}`}
-            className="border rounded-xl overflow-hidden hover:shadow transition bg-white"
+            href={`${href}#${post.slug}`}
+            className="group block"
           >
+            {/* IMAGE */}
+
             {post.images?.[0] && (
-              <div className="relative aspect-video">
+              <div className="relative aspect-video bg-white mb-3">
                 <Image
                   src={`/api/image/${post.images[0]}`}
                   alt={post.title}
                   fill
-                  className="object-cover"
+                  className="object-cover group-hover:opacity-90 transition"
                 />
               </div>
             )}
 
-            <div className="p-4">
-              <h3 className="font-semibold line-clamp-2">{post.title}</h3>
+            {/* TITLE */}
 
-              {post.excerpt && (
-                <p className="text-sm text-text-secondary mt-2 line-clamp-3">
-                  {post.excerpt}
-                </p>
-              )}
-            </div>
+            <h3 className="font-medium leading-snug group-hover:text-primary">
+              {post.title}
+            </h3>
+
+            {/* EXCERPT */}
+
+            {post.excerpt && (
+              <p className="text-sm text-text-secondary mt-1 line-clamp-2">
+                {post.excerpt}
+              </p>
+            )}
           </Link>
         ))}
       </div>
