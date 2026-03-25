@@ -20,7 +20,8 @@ const demoProducts: Product[] = Array.from({ length: 4 }).map((_, i) => ({
   price: 19.99 + i,
 
   images: ["grabki-szerokie-113x392-cm-geolia-n1_0"],
-
+  sku: `SKU${1000 + i}`,
+  content: "Opis produktu",
   categoryIds: [],
 
   stock: 10,

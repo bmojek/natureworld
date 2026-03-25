@@ -5,8 +5,9 @@ import ProductsForm from "./products-form";
 import CategoriesForm from "./categories-form";
 import PostsForm from "./posts-form";
 import { useAuth } from "@/app/context/auth-context";
+import ImportPage from "./import-form";
 
-type Tab = "products" | "categories" | "posts";
+type Tab = "products" | "categories" | "posts" | "import";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("products");
@@ -55,12 +56,23 @@ export default function AdminPage() {
         >
           Posty
         </button>
+        <button
+          onClick={() => setTab("import")}
+          className={`pb-2 font-medium ${
+            tab === "import"
+              ? "border-b-2 border-primary text-primary"
+              : "text-text-secondary"
+          }`}
+        >
+          Import
+        </button>
       </div>
 
       {/* CONTENT */}
       {tab === "products" && <ProductsForm />}
       {tab === "categories" && <CategoriesForm />}
       {tab === "posts" && <PostsForm />}
+      {tab === "import" && <ImportPage />}
     </main>
   );
 }

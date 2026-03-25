@@ -38,8 +38,6 @@ export default async function ProductPage({
     );
   }
 
-  const { attributes = {}, nutrition = {} } = product;
-
   return (
     <main className="bg-background">
       {/* ================= HERO ================= */}
@@ -92,10 +90,8 @@ export default async function ProductPage({
             </button>
           </div>
 
-          {product.shortDescription && (
-            <p className="text-text-secondary text-lg">
-              {product.shortDescription}
-            </p>
+          {product.content && (
+            <p className="text-text-secondary text-lg">{product.content}</p>
           )}
 
           <p className="text-3xl font-bold text-primary">
@@ -131,66 +127,12 @@ export default async function ProductPage({
       <section className="bg-white border-t">
         <div className="max-w-5xl mx-auto px-6 py-16 space-y-14">
           {/* DESCRIPTION */}
-          {product.description && (
+          {product.content && (
             <div>
               <h2 className="text-2xl font-semibold mb-4">Opis produktu</h2>
               <p className="text-text-secondary leading-relaxed">
-                {product.description}
+                {product.content}
               </p>
-            </div>
-          )}
-
-          {/* ATTRIBUTES */}
-          {Object.keys(attributes).length > 0 && (
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Specyfikacja</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                {attributes.weightKg && (
-                  <Spec label="Waga" value={`${attributes.weightKg} kg`} />
-                )}
-                {attributes.lengthCm && (
-                  <Spec label="Długość" value={`${attributes.lengthCm} cm`} />
-                )}
-                {attributes.widthCm && (
-                  <Spec label="Szerokość" value={`${attributes.widthCm} cm`} />
-                )}
-                {attributes.heightCm && (
-                  <Spec label="Wysokość" value={`${attributes.heightCm} cm`} />
-                )}
-                {attributes.material && (
-                  <Spec label="Materiał" value={attributes.material} />
-                )}
-                {attributes.flavor && (
-                  <Spec label="Smak" value={attributes.flavor} />
-                )}
-                {attributes.ageGroup && (
-                  <Spec label="Wiek" value={attributes.ageGroup} />
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* NUTRITION */}
-          {Object.keys(nutrition).length > 0 && (
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Wartości odżywcze</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-                {nutrition.protein && (
-                  <Spec label="Białko" value={`${nutrition.protein}%`} />
-                )}
-                {nutrition.fat && (
-                  <Spec label="Tłuszcz" value={`${nutrition.fat}%`} />
-                )}
-                {nutrition.fiber && (
-                  <Spec label="Błonnik" value={`${nutrition.fiber}%`} />
-                )}
-                {nutrition.ash && (
-                  <Spec label="Popiół" value={`${nutrition.ash}%`} />
-                )}
-                {nutrition.moisture && (
-                  <Spec label="Wilgotność" value={`${nutrition.moisture}%`} />
-                )}
-              </div>
             </div>
           )}
         </div>

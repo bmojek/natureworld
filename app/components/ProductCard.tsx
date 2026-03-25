@@ -42,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           >
             {product.images?.[0] && (
               <Image
-                src={`/api/image/${product.images[0]}_thumb.webp`}
+                src={`/api/image/${product.images[0] + "_thumb.webp"}`}
                 alt={product.name}
                 fill
                 sizes="(max-width: 768px) 50vw, 33vw"

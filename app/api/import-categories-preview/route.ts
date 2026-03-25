@@ -1,44 +1,58 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 
-import { collection, addDoc, getDocs } from "firebase/firestore";
-
-import { db } from "@/app/lib/firebase";
-
-function slugify(str: string) {
-  return str
-    .toLowerCase()
-    .replace(/ą/g, "a")
-    .replace(/ć/g, "c")
-    .replace(/ę/g, "e")
-    .replace(/ł/g, "l")
-    .replace(/ń/g, "n")
-    .replace(/ó/g, "o")
-    .replace(/ś/g, "s")
-    .replace(/ż/g, "z")
-    .replace(/ź/g, "z")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 function cleanCategory(cat: string) {
   if (!cat) return "";
   return cat.replace(/\(\d+\)/g, "").trim();
 }
+const rootMap: Record<string, "ogrod" | "zwierzeta"> = {
+  Rośliny: "ogrod",
+  Doniczki: "ogrod",
+  "Doniczki i pojemniki": "ogrod",
+  Nawozy: "ogrod",
+  Podłoża: "ogrod",
+  Florystyka: "ogrod",
+  Ozdoby: "ogrod",
+  Dekoracje: "ogrod",
 
-async function getCategoryMap() {
-  const snap = await getDocs(collection(db, "categories"));
+  Akwarystyka: "zwierzeta",
+  "Dla psów": "zwierzeta",
+  "Dla kotów": "zwierzeta",
+  Rolnictwo: "zwierzeta",
+};
+function getRoot(parts: string[]) {
+  const first = parts[0];
 
-  const map: any = {};
+  if (!first) return "ogrod";
 
-  snap.forEach((d) => {
-    map[d.data().slug] = {
-      id: d.id,
-      ...d.data(),
-    };
-  });
+  if (
+    first.includes("Akwarystyka") ||
+    first.includes("psów") ||
+    first.includes("kotów") ||
+    first.includes("Rolnictwo")
+  ) {
+    return "Zwierzęta";
+  }
 
-  return map;
+  return "Ogród";
+}
+
+function addToTree(tree: any, parts: string[]) {
+  const root = getRoot(parts);
+
+  if (!tree[root]) {
+    tree[root] = {};
+  }
+
+  let current = tree[root];
+
+  for (const part of parts) {
+    if (!current[part]) {
+      current[part] = {};
+    }
+
+    current = current[part];
+  }
 }
 
 export async function POST(req: Request) {
@@ -91,42 +105,17 @@ export async function POST(req: Request) {
       categories.add(cleanCategory(cat));
     }
 
-    const catMap = await getCategoryMap();
+    const tree: any = {};
 
     for (const path of categories) {
       const parts = path.split(" > ");
 
-      let parentId = null;
-
-      for (let i = 0; i < parts.length; i++) {
-        const name = parts[i].trim();
-
-        const slug = slugify(name);
-
-        if (catMap[slug]) {
-          parentId = catMap[slug].id;
-          continue;
-        }
-
-        const level = i;
-
-        const ref: any = await addDoc(collection(db, "categories"), {
-          name,
-          slug,
-          level,
-          parentId,
-        });
-
-        catMap[slug] = {
-          id: ref.id,
-        };
-
-        parentId = ref.id;
-      }
+      addToTree(tree, parts);
     }
 
     return NextResponse.json({
       ok: true,
+      tree,
     });
   } catch (e) {
     console.log(e);

@@ -1,35 +1,25 @@
-export interface Product {
-  id: string;
+export type Product = {
   name: string;
+
   slug: string;
+
+  sku: string;
+
+  allegroId?: string;
+
   price: number;
-  categoryIds: string[];
-  sku?: string;
-  description?: string;
-  shortDescription?: string;
+
+  stock: number;
 
   images: string[];
 
-  stock: number | 0;
+  content: string;
+
+  categoryIds: string[];
+
   isActive: boolean;
 
-  attributes?: {
-    weightKg?: number;
-    lengthCm?: number;
-    widthCm?: number;
-    heightCm?: number;
-    material?: string;
-    flavor?: string;
-    ageGroup?: string;
-  };
+  createdAt?: any;
 
-  nutrition?: {
-    protein?: number;
-    fat?: number;
-    fiber?: number;
-    ash?: number;
-    moisture?: number;
-  };
-
-  createdAt: Date;
-}
+  updatedAt?: any;
+};
