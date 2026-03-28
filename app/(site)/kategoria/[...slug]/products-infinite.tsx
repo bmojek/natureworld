@@ -15,7 +15,7 @@ export default function ProductsInfinite({
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [end, setEnd] = useState(false);
-  const [sort, setSort] = useState("newest");
+  const [sort, setSort] = useState("popular");
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -98,7 +98,7 @@ export default function ProductsInfinite({
           onChange={(e) => setSort(e.target.value)}
           className="border rounded px-3 py-2 text-sm"
         >
-          <option value="newest">Najnowsze</option>
+          <option value="popular">Popularne</option>
           <option value="price-asc">Cena rosnąco</option>
           <option value="price-desc">Cena malejąco</option>
         </select>

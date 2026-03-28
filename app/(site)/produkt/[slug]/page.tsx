@@ -1,15 +1,16 @@
 import { headers } from "next/headers";
-import Image from "next/image";
-import Link from "next/link";
-import { Heart, Truck, ShieldCheck } from "lucide-react";
+import ProductGallery from "@/app/components/ProductGallery";
 import AddToCartButton from "@/app/components/AddButton";
+import { Heart, Truck, ShieldCheck } from "lucide-react";
 import { Product } from "@/app/models/product";
 
 /* ================= API ================= */
 
 async function fetchProduct(slug: string) {
   const h = await headers();
+
   const host = h.get("host");
+
   const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
 
   const res = await fetch(`${protocol}://${host}/api/product?slug=${slug}`, {
@@ -17,7 +18,30 @@ async function fetchProduct(slug: string) {
   });
 
   if (!res.ok) return null;
+
   return res.json();
+}
+
+/* ================= parser ================= */
+
+function parseContent(content: string) {
+  try {
+    const json = JSON.parse(content);
+
+    let html = "";
+
+    json.sections?.forEach((s: any) => {
+      s.items?.forEach((i: any) => {
+        if (i.type === "TEXT") {
+          html += i.content;
+        }
+      });
+    });
+
+    return html;
+  } catch {
+    return content;
+  }
 }
 
 /* ================= PAGE ================= */
@@ -28,126 +52,70 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product: Product = await fetchProduct(slug);
 
+  const product: Product = await fetchProduct(slug);
   if (!product) {
-    return (
-      <div className="p-20 text-center text-text-secondary">
-        Produkt nie znaleziony
-      </div>
-    );
+    return <div className="p-20 text-center">Produkt nie znaleziony</div>;
   }
+
+  const description = parseContent(product.content || "");
 
   return (
     <main className="bg-background">
-      {/* ================= HERO ================= */}
       <section className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-2 gap-14">
         {/* GALLERY */}
-        <div>
-          <div className="bg-white rounded-2xl p-6 flex items-center justify-center">
-            <Image
-              src={`/api/image/${product.images[0] + "_main.webp"}`}
-              alt={product.name}
-              width={520}
-              height={520}
-              priority
-              className="object-contain"
-            />
-          </div>
 
-          {product.images.length > 1 && (
-            <div className="flex gap-3 mt-4">
-              {product.images.map((img: string, i: number) => (
-                <div
-                  key={i}
-                  className="w-20 h-20 bg-white  rounded-lg hover:border-primary transition flex items-center justify-center"
-                >
-                  <Image
-                    src={`/api/image/${img + "_thumb.webp"}`}
-                    alt={`${product.name} ${i + 1}`}
-                    width={80}
-                    height={80}
-                    className="object-contain"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductGallery images={product.images} name={product.name} />
 
         {/* INFO */}
+
         <div className="flex flex-col gap-6">
-          <div className="flex justify-between items-start gap-4">
-            <h1 className="text-4xl font-semibold text-text-main">
-              {product.name}
-            </h1>
-
-            <button
-              aria-label="Dodaj do ulubionych"
-              className="p-2 rounded-full hover:bg-red-50 transition"
-            >
-              <Heart className="text-red-500" />
-            </button>
-          </div>
-
-          {product.content && (
-            <p className="text-text-secondary text-lg">{product.content}</p>
-          )}
+          <h1 className="text-4xl font-semibold">{product.name}</h1>
 
           <p className="text-3xl font-bold text-primary">
             {product.price.toFixed(2)} zł
           </p>
 
-          <div className="text-sm">
+          <div>
             {product.stock > 0 ? (
-              <span className="text-primary font-medium">
-                ✔ Dostępny ({product.stock} szt.)
-              </span>
+              <span className="text-primary">✔ Dostępny ({product.stock})</span>
             ) : (
-              <span className="text-red-500 font-medium">
-                ✖ Brak w magazynie
-              </span>
+              <span className="text-red-500">Brak</span>
             )}
           </div>
 
           <AddToCartButton product={product} />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-text-secondary mt-4">
-            <div className="flex gap-2 items-center">
-              <Truck size={16} /> Wysyłka 24–48h
+          <div className="grid gap-2 text-sm text-text-secondary">
+            <div className="flex gap-2">
+              <Truck size={16} />
+              Wysyłka 24h
             </div>
-            <div className="flex gap-2 items-center">
-              <ShieldCheck size={16} /> Gwarancja jakości
+
+            <div className="flex gap-2">
+              <ShieldCheck size={16} />
+              Gwarancja
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================= DETAILS ================= */}
-      <section className="bg-white border-t">
-        <div className="max-w-5xl mx-auto px-6 py-16 space-y-14">
-          {/* DESCRIPTION */}
-          {product.content && (
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Opis produktu</h2>
-              <p className="text-text-secondary leading-relaxed">
-                {product.content}
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
+      {/* OPIS */}
+
+      {description && (
+        <section className="bg-white border-t">
+          <div className="max-w-5xl mx-auto px-6 py-16">
+            <h2 className="text-2xl mb-6">Opis produktu</h2>
+
+            <div
+              className="prose max-w-none"
+              dangerouslySetInnerHTML={{
+                __html: description,
+              }}
+            />
+          </div>
+        </section>
+      )}
     </main>
-  );
-}
-
-/* ================= HELPERS ================= */
-
-function Spec({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between border-b pb-2">
-      <span className="text-text-secondary">{label}</span>
-      <span className="font-medium text-text-main">{value}</span>
-    </div>
   );
 }

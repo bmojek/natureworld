@@ -7,6 +7,7 @@ import {
   where,
   limit,
   startAfter,
+  orderBy,
   doc,
   getDoc,
 } from "firebase/firestore";
@@ -20,8 +21,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
 
     const categoryIdsParam = searchParams.get("categoryIds");
-
     const cursorId = searchParams.get("cursor");
+    const sort = searchParams.get("sort") || "popular";
 
     if (!categoryIdsParam) {
       return NextResponse.json({
@@ -32,12 +33,35 @@ export async function GET(req: NextRequest) {
 
     const categoryIds = categoryIdsParam.split(",");
 
-    /* ================= BASE ================= */
+    /* ================= SORT ================= */
+
+    let orderField: "stock" | "price" = "stock";
+    let orderDir: "asc" | "desc" = "desc";
+
+    if (sort === "price-asc") {
+      orderField = "price";
+      orderDir = "asc";
+    }
+
+    if (sort === "price-desc") {
+      orderField = "price";
+      orderDir = "desc";
+    }
+
+    if (sort === "popular") {
+      orderField = "stock";
+      orderDir = "desc";
+    }
+
+    /* ================= BASE QUERY ================= */
 
     let q = query(
       collection(db, "products"),
 
       where("categoryIds", "array-contains-any", categoryIds.slice(0, 10)),
+
+      orderBy(orderField, orderDir),
+      orderBy("__name__"),
 
       limit(PAGE_SIZE),
     );
@@ -45,15 +69,18 @@ export async function GET(req: NextRequest) {
     /* ================= CURSOR ================= */
 
     if (cursorId) {
-      const lastDoc = await getDoc(doc(db, "products", cursorId));
+      const lastDocSnap = await getDoc(doc(db, "products", cursorId));
 
-      if (lastDoc.exists()) {
+      if (lastDocSnap.exists()) {
         q = query(
           collection(db, "products"),
 
           where("categoryIds", "array-contains-any", categoryIds.slice(0, 10)),
 
-          startAfter(lastDoc),
+          orderBy(orderField, orderDir),
+          orderBy("__name__"),
+
+          startAfter(lastDocSnap),
 
           limit(PAGE_SIZE),
         );
@@ -73,6 +100,7 @@ export async function GET(req: NextRequest) {
         slug: data.slug,
         price: data.price ?? 0,
         images: data.images ?? [],
+        stock: data.stock ?? 0,
       };
     });
 

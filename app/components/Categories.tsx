@@ -35,7 +35,7 @@ export default function Categories() {
   const closeMenu = () => {
     const t = setTimeout(() => {
       setOpenId(null);
-    }, 200);
+    }, 500);
 
     setCloseTimeout(t);
   };

@@ -35,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               relative
               aspect-square
               rounded-l-2xl md:rounded-t-2xl md:rounded-l-none
-              bg-linear-to-b from-white to-neutral-100
+              bg-linear-to-b 
               p-4
               overflow-hidden
             "

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
+
 import { db } from "@/app/lib/firebase";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+
     const slug = searchParams.get("slug");
 
     if (!slug) {
@@ -23,46 +25,28 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const doc = snap.docs[0];
-    const d = doc.data();
-
-    /* ================= RESPONSE ================= */
+    const docSnap = snap.docs[0];
+    const d = docSnap.data();
 
     return NextResponse.json(
       {
-        id: doc.id,
+        id: docSnap.id,
 
         /* BASIC */
         name: d.name,
         slug: d.slug,
-        shortDescription: d.shortDescription ?? "",
-        description: d.description ?? "",
-
-        price: d.price,
+        price: d.price ?? 0,
         stock: d.stock ?? 0,
         isActive: d.isActive ?? true,
 
+        /* IMPORTANT */
         images: d.images ?? [],
+        content: d.content ?? "",
+
+        /* OPTIONAL */
+        sku: d.sku ?? "",
+        allegroId: d.allegroId ?? "",
         categoryIds: d.categoryIds ?? [],
-
-        /* OPTIONAL STRUCTURED DATA */
-        attributes: {
-          weightKg: d.attributes?.weightKg ?? null,
-          lengthCm: d.attributes?.lengthCm ?? null,
-          widthCm: d.attributes?.widthCm ?? null,
-          heightCm: d.attributes?.heightCm ?? null,
-          material: d.attributes?.material ?? null,
-          flavor: d.attributes?.flavor ?? null,
-          ageGroup: d.attributes?.ageGroup ?? null,
-        },
-
-        nutrition: {
-          protein: d.nutrition?.protein ?? null,
-          fat: d.nutrition?.fat ?? null,
-          fiber: d.nutrition?.fiber ?? null,
-          ash: d.nutrition?.ash ?? null,
-          moisture: d.nutrition?.moisture ?? null,
-        },
 
         /* META */
         createdAt: d.createdAt?.seconds ? d.createdAt.seconds * 1000 : null,
@@ -75,6 +59,7 @@ export async function GET(req: NextRequest) {
     );
   } catch (err) {
     console.error("API /product error:", err);
+
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
