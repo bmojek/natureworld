@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getCategories } from "@/app/lib/firestore-categories";
 import { buildCategoryTree, CategoryTree } from "@/app/lib/categories";
 import { ChevronDown } from "lucide-react";
@@ -9,9 +9,9 @@ import { extraMenuLinks } from "@/app/lib/menu-links";
 
 export default function Categories() {
   const [tree, setTree] = useState<CategoryTree[] | null>(null);
-
   const [openId, setOpenId] = useState<string | null>(null);
-  const [closeTimeout, setCloseTimeout] = useState<any>(null);
+
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -22,25 +22,18 @@ export default function Categories() {
     load();
   }, []);
 
-  /* ================= MENU CONTROL ================= */
-
   const openMenu = (id: string) => {
-    if (closeTimeout) {
-      clearTimeout(closeTimeout);
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
     }
-
     setOpenId(id);
   };
 
   const closeMenu = () => {
-    const t = setTimeout(() => {
+    closeTimeoutRef.current = setTimeout(() => {
       setOpenId(null);
-    }, 500);
-
-    setCloseTimeout(t);
+    }, 250);
   };
-
-  /* ================= SKELETON ================= */
 
   if (!tree) {
     return (
@@ -56,8 +49,6 @@ export default function Categories() {
       </nav>
     );
   }
-
-  /* ================= MENU ================= */
 
   return (
     <nav className="bg-primary relative z-40 md:block hidden">
@@ -84,57 +75,10 @@ export default function Categories() {
                 />
               )}
             </Link>
-
-            {/* MEGA MENU */}
-
-            {cat.children.length > 0 && (
-              <div
-                onMouseEnter={() => openMenu(cat.id)}
-                onMouseLeave={closeMenu}
-                className={`
-                  absolute left-0 right-0 top-full bg-background shadow-lg
-                  transition-all duration-200
-                  ${
-                    openId === cat.id
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 -translate-y-2 pointer-events-none"
-                  }
-                `}
-              >
-                <div className="max-w-7xl mx-auto grid grid-cols-4 gap-6 p-6">
-                  {cat.children.map((sub) => (
-                    <div key={sub.id}>
-                      <Link
-                        href={`/kategoria/${cat.slug}/${sub.slug}`}
-                        onClick={() => setOpenId(null)}
-                        className="font-semibold block mb-2 hover:underline"
-                      >
-                        {sub.name}
-                      </Link>
-
-                      <ul className="space-y-1">
-                        {sub.children.map((child) => (
-                          <li key={child.id}>
-                            <Link
-                              href={`/kategoria/${cat.slug}/${sub.slug}/${child.slug}`}
-                              onClick={() => setOpenId(null)}
-                              className="text-sm text-text-secondary hover:text-primary"
-                            >
-                              {child.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </li>
         ))}
 
         {/* EXTRA LINKS */}
-
         {extraMenuLinks.map((item) => (
           <li key={item.href}>
             <Link
@@ -149,6 +93,54 @@ export default function Categories() {
           </li>
         ))}
       </ul>
+
+      {/* 🔥 MEGA MENU GLOBAL (FULL WIDTH) */}
+      {tree.map((cat) =>
+        cat.children.length > 0 ? (
+          <div
+            key={cat.id}
+            onMouseEnter={() => openMenu(cat.id)}
+            onMouseLeave={closeMenu}
+            className={`
+              absolute left-0 w-full top-full bg-background shadow-lg
+              transition-all duration-150 ease-out
+              ${
+                openId === cat.id
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 -translate-y-2 pointer-events-none"
+              }
+            `}
+          >
+            <div className="max-w-7xl mx-auto grid grid-cols-4 gap-6 p-6">
+              {cat.children.map((sub) => (
+                <div key={sub.id}>
+                  <Link
+                    href={`/kategoria/${cat.slug}/${sub.slug}`}
+                    onClick={() => setOpenId(null)}
+                    className="font-semibold block mb-2 hover:underline"
+                  >
+                    {sub.name}
+                  </Link>
+
+                  <ul className="space-y-1">
+                    {sub.children.map((child) => (
+                      <li key={child.id}>
+                        <Link
+                          href={`/kategoria/${cat.slug}/${sub.slug}/${child.slug}`}
+                          onClick={() => setOpenId(null)}
+                          className="text-sm text-text-secondary hover:text-primary"
+                        >
+                          {child.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null,
+      )}
     </nav>
   );
 }

@@ -140,7 +140,7 @@ export default function Home() {
 
         {/* ================= USP ================= */}
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center border-t pt-10">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center  pt-10">
           <div>
             <p className="text-lg font-semibold">Darmowa dostawa</p>
             <p className="text-sm text-text-secondary">od 99 zł</p>

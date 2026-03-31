@@ -15,7 +15,9 @@ type PageProps = {
     slug: string[];
   }>;
 };
-
+function capitalizeFirstLetter(val: string) {
+  return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}
 // 🔑 FETCH Z API – TYLKO TUTAJ
 async function fetchCategories(): Promise<CategoryModel[]> {
   const h = await headers();
@@ -119,7 +121,7 @@ export default async function CategoryPage({ params }: PageProps) {
             <span key={i} className="flex items-center gap-1">
               <span>/</span>
               <Link href={`/kategoria/${slug.slice(0, i + 1).join("/")}`}>
-                {s.replaceAll("-", " ")}
+                {capitalizeFirstLetter(s.replaceAll("-", " "))}
               </Link>
             </span>
           ))}

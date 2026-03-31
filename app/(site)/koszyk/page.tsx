@@ -41,7 +41,10 @@ export default function CartPage() {
               className="flex items-center gap-4 py-4 px-2"
             >
               {/* IMAGE */}
-              <Link href={`/produkt/${item.slug}`} className="w-20 h-20">
+              <Link
+                href={`/produkt/${item.slug}`}
+                className="w-20 h-20 bg-bg-muted rounded-md  overflow-hidden flex items-center justify-center"
+              >
                 <Image
                   src={`/api/image/${item.image + "_thumb.webp"}`}
                   alt={item.name}
