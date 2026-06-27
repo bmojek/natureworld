@@ -3,7 +3,7 @@ import { getSignedImageUrl } from "@/app/lib/r2";
 
 export async function GET(
   req: NextRequest,
-  context: { params: { key: string } }
+  context: { params: Promise<{ key: string }> }
 ) {
   const { key } = await context.params;
 

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 type Props = {
   images: string[];
@@ -12,15 +13,15 @@ type Props = {
 export default function Lightbox({ images, index, onClose }: Props) {
   const [i, setI] = useState(index);
 
-  const prev = () => setI((v) => (v - 1 + images.length) % images.length);
+  const prev = () => setI((value) => (value - 1 + images.length) % images.length);
 
-  const next = () => setI((v) => (v + 1) % images.length);
+  const next = () => setI((value) => (value + 1) % images.length);
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "ArrowLeft") prev();
+      if (event.key === "ArrowRight") next();
     };
 
     window.addEventListener("keydown", handler);
@@ -30,40 +31,53 @@ export default function Lightbox({ images, index, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
       onClick={onClose}
     >
       <button
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={(event) => {
+          event.stopPropagation();
           prev();
         }}
-        className="absolute left-4 text-white text-3xl"
+        className="absolute left-4 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20"
+        aria-label="Poprzednie zdjęcie"
       >
-        ‹
+        <ChevronLeft size={28} />
       </button>
 
       <div
-        className="relative max-w-[90vw] max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
+        className="relative max-h-[90vh] max-w-[90vw]"
+        onClick={(event) => event.stopPropagation()}
       >
         <Image
           src={`/api/image/${images[i]}`}
           alt=""
           width={1200}
           height={1200}
-          className="max-h-[90vh] w-auto h-auto"
+          className="h-auto max-h-[90vh] w-auto"
         />
       </div>
 
       <button
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={(event) => {
+          event.stopPropagation();
           next();
         }}
-        className="absolute right-4 text-white text-3xl"
+        className="absolute right-4 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20"
+        aria-label="Następne zdjęcie"
       >
-        ›
+        <ChevronRight size={28} />
+      </button>
+
+      <button
+        onClick={(event) => {
+          event.stopPropagation();
+          onClose();
+        }}
+        className="absolute right-4 top-4 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20"
+        aria-label="Zamknij galerię"
+      >
+        <X size={24} />
       </button>
     </div>
   );

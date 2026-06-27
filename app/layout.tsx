@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Poppins, Roboto } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/auth-context";
-import { Car } from "lucide-react";
 import { CartProvider } from "./context/cart-context";
 
 const poppins = Poppins({

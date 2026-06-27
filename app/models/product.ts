@@ -24,3 +24,5 @@ export type Product = {
 
   updatedAt?: any;
 };
+
+export type ProductModel = Product;
