@@ -1,7 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { ArrowLeft, CalendarDays, Newspaper, ShoppingBag } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Home,
+  Newspaper,
+  ShoppingBag,
+  Sparkles,
+} from "lucide-react";
 
 import PostGallery from "@/app/components/Gallery/PostGallery";
 
@@ -15,18 +23,17 @@ type Post = {
   publishedAt?: any;
 };
 
-const allegroUrl = "https://allegro.pl/uzytkownik/nature-world";
 const fallbackImage = "banerwide2.webp";
 
 const fallbackPosts: Post[] = [
   {
     id: "start",
-    title: "Startujemy z firmową stroną Nature World",
+    title: "Nowości w Nature World",
     slug: "startujemy-z-firmowa-strona",
     excerpt:
-      "To miejsce na najnowsze informacje o ofercie, sezonowych produktach i zmianach w sprzedaży.",
+      "Sprawdzaj aktualne informacje o produktach do ogrodu, domu i dla zwierząt.",
     content:
-      "Na stronie będziemy publikować krótkie aktualizacje, zapowiedzi nowości oraz praktyczne informacje dla klientów. To pierwszy etap firmowej komunikacji Nature World.",
+      "W aktualnościach znajdziesz zapowiedzi nowości, sezonowe propozycje oraz praktyczne informacje o asortymencie Nature World.",
     images: ["banerwide2.webp", "bilbordsharp.webp", "o-nas.webp"],
     publishedAt: Date.now(),
   },
@@ -35,20 +42,20 @@ const fallbackPosts: Post[] = [
     title: "Produkty sezonowe dla domu i ogrodu",
     slug: "produkty-sezonowe",
     excerpt:
-      "Będziemy tu pokazywać nowości, praktyczne inspiracje i kategorie warte uwagi.",
+      "Praktyczne propozycje na balkon, ogród, dom i najważniejsze prace sezonowe.",
     content:
-      "Oferta Nature World może zmieniać się razem z sezonem. Aktualności pozwolą szybko pokazać klientom, co właśnie pojawiło się w sprzedaży i na co warto zwrócić uwagę.",
+      "Oferta Nature World zmienia się razem z sezonem. Warto śledzić nowe dostawy, produkty do pielęgnacji roślin, dekoracje oraz akcesoria przydatne w domu i ogrodzie.",
     images: ["bilbordsharp.webp", "banerwide2.webp"],
     publishedAt: Date.now(),
   },
   {
     id: "allegro",
-    title: "Aktualna oferta dostępna na Allegro",
+    title: "Oferta w sklepie Nature World",
     slug: "oferta-na-allegro",
     excerpt:
-      "Na tym etapie zakupy kierujemy do działającego kanału sprzedaży Nature World.",
+      "Zobacz dostępne produkty i wybierz artykuły dopasowane do swoich potrzeb.",
     content:
-      "Strona firmowa ma budować zaufanie i porządkować informacje o marce, a sprzedaż może być realizowana przez Allegro. To prosty i wygodny start przed rozbudową własnego sklepu.",
+      "W ofercie Nature World znajdziesz artykuły ogrodnicze, dekoracje, produkty sezonowe oraz asortyment dla zwierząt. Zakupy zrobisz stacjonarnie, a wybrane produkty są dostępne również online.",
     images: ["o-nas.webp"],
     publishedAt: Date.now(),
   },
@@ -96,81 +103,112 @@ export default async function NewsPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <section className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
-          >
-            <ArrowLeft size={17} />
-            Strona główna
-          </Link>
+      <Link
+        href="/"
+        className="fixed left-4 top-4 z-40 inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/70 bg-white/90 px-5 text-sm font-semibold text-primary shadow-xl backdrop-blur transition hover:-translate-y-0.5 hover:bg-primary hover:text-white md:left-8 md:top-8"
+      >
+        <Home size={17} />
+        Strona główna
+      </Link>
 
+      <section className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-6 flex justify-end">
           <Link
-            href={allegroUrl}
-            target="_blank"
+            href="/#kontakt"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
           >
             <ShoppingBag size={17} />
-            Oferta na Allegro
+            Kontakt
           </Link>
         </div>
 
-        <header className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
-          <div className="rounded-3xl bg-primary p-7 text-white shadow-sm md:p-10">
-            <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-white/75">
-              <Newspaper size={18} />
-              Aktualności
-            </p>
-            <h1 className="mt-5 text-4xl font-semibold leading-tight text-white md:text-6xl">
-              Najnowsze informacje z Nature World
-            </h1>
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-white/80">
-              Tutaj zbieramy wpisy firmowe, nowości produktowe, sezonowe
-              informacje i komunikaty dla klientów.
-            </p>
-          </div>
+        <header className="overflow-hidden rounded-[2rem] bg-white/80 shadow-sm">
+          <div className="grid gap-0 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
+            <div className="relative bg-primary p-7 text-white md:p-10 lg:p-12">
+              <div className="absolute inset-x-0 top-0 h-1 bg-accent" />
+              <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-white/75">
+                <Newspaper size={18} />
+                Aktualności
+              </p>
+              <h1 className="mt-5 text-4xl font-semibold leading-tight !text-white md:text-6xl">
+                Najnowsze informacje z Nature World
+              </h1>
+              <p className="mt-6 max-w-3xl text-lg leading-8 text-white/85">
+                Nowości produktowe, sezonowe inspiracje, porady ogrodnicze oraz
+                informacje o ofercie dla domu i zwierząt.
+              </p>
 
-          <div className="overflow-hidden rounded-3xl bg-white/80 shadow-sm">
-            <div className="relative aspect-[4/3]">
+              <div className="mt-8 flex flex-wrap gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white">
+                  <Sparkles size={16} />
+                  Nowości
+                </span>
+                <span className="inline-flex rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white">
+                  Ogród i rośliny
+                </span>
+                <span className="inline-flex rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white">
+                  Zwierzęta
+                </span>
+              </div>
+            </div>
+
+            <div className="relative min-h-[320px] bg-white">
               <Image
                 src={`/api/image/${featured.images?.[0] ?? fallbackImage}`}
                 alt=""
                 fill
                 priority
-                sizes="(min-width: 1024px) 40vw, 100vw"
+                sizes="(min-width: 1024px) 45vw, 100vw"
                 className="object-cover"
               />
+              <div className="absolute inset-0 bg-black/10" />
             </div>
           </div>
         </header>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 pb-16">
+      <section className="max-w-7xl mx-auto px-4 pb-20">
         <div className="grid gap-8 lg:grid-cols-[0.75fr_1.55fr]">
-          <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          <aside className="space-y-4 pt-8 lg:sticky lg:top-6 lg:self-start">
             <div className="rounded-3xl bg-white/80 p-6 shadow-sm">
               <h2 className="text-lg font-semibold">Wpisy</h2>
-              <nav className="mt-5 grid gap-3">
+              <nav className="mt-5 grid max-h-[52vh] gap-3 overflow-y-auto pr-2">
                 {posts.map((post) => (
                   <Link
                     key={post.id}
                     href={`#${post.slug}`}
-                    className="rounded-2xl bg-background p-4 text-sm font-semibold leading-snug transition hover:text-primary"
+                    className="group rounded-2xl bg-background p-4 text-sm font-semibold leading-snug transition hover:bg-primary hover:text-white"
                   >
                     {post.title}
                   </Link>
                 ))}
               </nav>
             </div>
+
+            <div className="rounded-3xl bg-primary p-6 text-white shadow-sm">
+              <h2 className="text-lg font-semibold !text-white">
+                Nature World
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-white/80">
+                Aktualności pomagają śledzić nowości, produkty sezonowe i
+                inspiracje dla ogrodu, domu oraz zwierząt.
+              </p>
+              <Link
+                href="/#kontakt"
+                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white"
+              >
+                Kontakt
+                <ArrowRight size={16} />
+              </Link>
+            </div>
           </aside>
 
-          <div className="space-y-8">
+          <div className="space-y-8 pt-8">
             {posts.map((post) => (
               <article
                 id={post.slug}
                 key={post.id}
-                className="scroll-mt-8 overflow-hidden rounded-3xl bg-white/80 shadow-sm"
+                className="scroll-mt-8 overflow-hidden rounded-3xl bg-white/80 shadow-sm transition hover:shadow-xl"
               >
                 {post.images?.[0] && (
                   <div className="relative aspect-[16/8] bg-white">
@@ -185,7 +223,7 @@ export default async function NewsPage() {
                 )}
 
                 <div className="p-6 md:p-8">
-                  <p className="flex items-center gap-2 text-sm text-text-secondary">
+                  <p className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
                     <CalendarDays size={16} className="text-primary" />
                     {formatDate(post.publishedAt)}
                   </p>

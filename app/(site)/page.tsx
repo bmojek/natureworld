@@ -9,8 +9,10 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  Dog,
   Facebook,
-  Home,
+  Fish,
+  Flower2,
   Instagram,
   Leaf,
   Mail,
@@ -25,6 +27,7 @@ import {
   Sprout,
   Store,
   Truck,
+  Waves,
 } from "lucide-react";
 
 type NewsPost = {
@@ -37,17 +40,23 @@ type NewsPost = {
   publishedAt?: any;
 };
 
+const facebookUrl = "https://www.facebook.com/p/Nature-World-61573608614787/";
 const allegroUrl = "https://allegro.pl/uzytkownik/nature-world";
-const facebookUrl = "https://facebook.com";
+const phoneNumber = "14 650 15 01";
+const emailAddress = "biuro@nature-world.pl";
+const storeAddress = "Oświatowa 2, 33-111 Koszyce Małe";
+const openingHours = "Pn-Pt 9:00-18:00, Sob 9:00-15:00";
+const mapsUrl =
+  "https://www.google.com/maps/place/O%C5%9Bwiatowa+2,+33-111+Koszyce+Ma%C5%82e";
 const fallbackImage = "banerwide2.webp";
 
 const fallbackPosts: NewsPost[] = [
   {
     id: "start",
-    title: "Startujemy z firmową stroną Nature World",
+    title: "Nowości w Nature World",
     slug: "startujemy-z-firmowa-strona",
     excerpt:
-      "To miejsce na najnowsze informacje o ofercie, sezonowych produktach i zmianach w sprzedaży.",
+      "Sprawdzaj aktualne informacje o produktach do ogrodu, domu i dla zwierząt.",
     images: ["banerwide2.webp"],
     publishedAt: Date.now(),
   },
@@ -56,17 +65,17 @@ const fallbackPosts: NewsPost[] = [
     title: "Produkty sezonowe dla domu i ogrodu",
     slug: "produkty-sezonowe",
     excerpt:
-      "Będziemy tu pokazywać nowości, praktyczne inspiracje i kategorie warte uwagi.",
+      "Praktyczne propozycje na balkon, ogród, dom i najważniejsze prace sezonowe.",
     images: ["bilbordsharp.webp"],
     publishedAt: Date.now(),
   },
   {
     id: "allegro",
-    title: "Aktualna oferta dostępna na Allegro",
+    title: "Oferta w sklepie Nature World",
     slug: "oferta-na-allegro",
     excerpt:
-      "Na tym etapie zakupy kierujemy do działającego kanału sprzedaży Nature World.",
-    images: ["o-nas.webp"],
+      "Zobacz dostępne produkty i wybierz artykuły dopasowane do swoich potrzeb.",
+    images: ["main_onas2.webp"],
     publishedAt: Date.now(),
   },
 ];
@@ -97,44 +106,105 @@ const categories = [
 const offerGroups = [
   {
     title: "Ogród i rośliny",
-    image: "bilbordsharp.webp",
-    items: ["nasiona warzyw, ziół i roślin ozdobnych", "nawozy i preparaty", "podłoża oraz ziemie", "doniczki, osłonki i pojemniki"],
+    image: "main_ogrod.webp",
+    items: [
+      "nasiona warzyw, ziół i roślin ozdobnych",
+      "nawozy i preparaty",
+      "podłoża oraz ziemie",
+      "doniczki, osłonki i pojemniki",
+    ],
   },
   {
     title: "Zwierzęta",
-    image: "o-nas.webp",
-    items: ["produkty dla psów", "produkty dla kotów", "akwarystyka", "praktyczne akcesoria dla pupili"],
+    image: "main_zwierzeta.webp",
+    items: [
+      "produkty dla psów",
+      "produkty dla kotów",
+      "akwarystyka",
+      "praktyczne akcesoria dla pupili",
+    ],
   },
   {
     title: "Dom i sezon",
-    image: "banerwide2.webp",
-    items: ["dekoracje i ozdoby", "florystyka", "produkty okazjonalne", "nowości dostępne w sprzedaży online"],
+    image: "main_dom.webp",
+    items: [
+      "dekoracje i ozdoby",
+      "florystyka",
+      "produkty okazjonalne",
+      "nowości dostępne w sklepie",
+    ],
   },
 ];
 
 const storeFacts = [
   {
     icon: Store,
-    title: "Sklep internetowy w rozwoju",
-    text: "Nature World działa jako młoda marka. Strona firmowa ma najpierw porządkować informacje, aktualności i kontakt.",
+    title: "Szeroki wybór produktów",
+    text: "W jednym miejscu znajdziesz artykuły ogrodnicze, dekoracyjne, sezonowe i zoologiczne.",
   },
   {
     icon: ShoppingBag,
-    title: "Zakupy przez Allegro",
-    text: "Aktualny kanał sprzedaży prowadzi przez Allegro, więc klient od razu trafia do działającej oferty.",
+    title: "Wygodne zakupy online",
+    text: "Aktualną ofertę Nature World możesz sprawdzić i zamówić bezpośrednio przez Allegro.",
   },
   {
     icon: Newspaper,
-    title: "Aktualności na pierwszym miejscu",
-    text: "Nowe produkty, sezonowe komunikaty i informacje o ofercie mogą być publikowane bez przebudowy strony.",
+    title: "Nowości i inspiracje",
+    text: "Regularnie pokazujemy produkty sezonowe, praktyczne wskazówki i propozycje warte uwagi.",
   },
 ];
 
 const servicePoints = [
-  "szybka komunikacja z klientem",
-  "oferta ogrodniczo-zoologiczna w jednym miejscu",
-  "sezonowe aktualizacje i nowości",
-  "prosty kierunek rozbudowy pod pełny sklep",
+  "produkty ogrodnicze i akcesoria do roślin",
+  "dekoracje domowe, ozdoby i dodatki sezonowe",
+  "asortyment zoologiczny dla zwierząt",
+  "zakupy stacjonarne, Allegro i dostawy",
+];
+
+const gardenSeason = [
+  {
+    title: "Wysiew i rozsady",
+    text: "Nasiona warzyw, ziół i roślin ozdobnych, które dobrze pasują do wiosennego startu sezonu.",
+  },
+  {
+    title: "Pielęgnacja roślin",
+    text: "Nawozy, preparaty, podłoża i ziemie do codziennej opieki nad roślinami domowymi i ogrodowymi.",
+  },
+  {
+    title: "Doniczki i dekoracje",
+    text: "Doniczki, osłonki, pojemniki, ozdoby oraz dodatki florystyczne do domu, balkonu i ogrodu.",
+  },
+  {
+    title: "Produkty sezonowe",
+    text: "Artykuły okazjonalne, dekoracje i nowości dopasowane do aktualnej pory roku.",
+  },
+];
+
+const petZones = [
+  {
+    icon: Dog,
+    title: "Dla psów",
+    text: "Karmy, przysmaki, zabawki i praktyczne akcesoria dla codziennej opieki nad psem.",
+  },
+  {
+    icon: PawPrint,
+    title: "Dla kotów",
+    text: "Produkty dla kotów: od podstawowej opieki po dodatki poprawiające komfort pupila.",
+  },
+  {
+    icon: Fish,
+    title: "Akwarystyka",
+    text: "Asortyment akwarystyczny i drobne akcesoria dla osób rozwijających domowe akwarium.",
+  },
+];
+
+const newsTopics = [
+  "nowe dostawy i produkty w ofercie",
+  "sezonowe porady ogrodnicze",
+  "propozycje dla psów, kotów i akwarystyki",
+  "informacje o promocjach i sprzedaży online",
+  "krótkie inspiracje dla domu, balkonu i ogrodu",
+  "komunikaty organizacyjne Nature World",
 ];
 
 function formatDate(value: any) {
@@ -184,6 +254,8 @@ export default function Main() {
     [posts],
   );
 
+  const homepagePosts = useMemo(() => visiblePosts.slice(0, 6), [visiblePosts]);
+
   const featured = visiblePosts[0];
   const secondaryPosts = visiblePosts.slice(1, 4);
 
@@ -196,17 +268,16 @@ export default function Main() {
           <FeaturedNews post={featured} loading={loading} />
 
           <aside className="grid gap-4">
-            <div className="rounded-3xl bg-primary p-7 text-white shadow-sm">
+            <div className="animate-fade-up rounded-3xl bg-primary p-7 text-white shadow-sm [animation-delay:120ms]">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">
                 Nature World
               </p>
-              <h1 className="mt-4 text-3xl font-semibold leading-tight text-white">
+              <h1 className="mt-4 text-3xl font-semibold leading-tight !text-white">
                 Aktualności, nowości i ważne informacje
               </h1>
               <p className="mt-5 leading-7 text-white/80">
-                To główne miejsce komunikacji marki. Tu pokazujemy nowe
-                produkty, sezonowe wpisy, informacje o ofercie i krótkie
-                aktualizacje dla klientów.
+                Sprawdzaj nowe produkty, sezonowe inspiracje, porady ogrodnicze
+                oraz informacje o ofercie dla domu i zwierząt.
               </p>
               <Link
                 href={allegroUrl}
@@ -218,7 +289,7 @@ export default function Main() {
               </Link>
             </div>
 
-            <div className="rounded-3xl bg-white/80 p-6 shadow-sm">
+            <div className="animate-fade-up rounded-3xl bg-white/80 p-6 shadow-sm [animation-delay:220ms]">
               <h2 className="flex items-center gap-2 text-lg font-semibold">
                 <Newspaper className="text-primary" size={20} />
                 Najnowsze wpisy
@@ -233,12 +304,12 @@ export default function Main() {
         </div>
       </section>
 
-      <section id="aktualnosci" className="max-w-7xl mx-auto px-4 py-8">
+      <section id="aktualnosci" className="animate-fade-up max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <SectionHeader
             eyebrow="Aktualności"
             title="Wszystko, co nowe w Nature World"
-            description="Sekcja aktualności jest centrum tej strony. Później można ją zasilać wpisami z panelu admina."
+            description="Nowości produktowe, sezonowe inspiracje i praktyczne informacje dla osób, które dbają o ogród, dom oraz swoich pupili."
           />
           <Link
             href="/aktualnosci"
@@ -250,7 +321,7 @@ export default function Main() {
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {visiblePosts.map((post) => (
+          {homepagePosts.map((post) => (
             <NewsCard key={post.id} post={post} />
           ))}
         </div>
@@ -260,7 +331,7 @@ export default function Main() {
         <SectionHeader
           eyebrow="Oferta"
           title="Krótko o tym, czym się zajmujemy"
-          description="Oferta jest dodatkiem do aktualności, ale użytkownik powinien od razu zrozumieć, co można znaleźć w Nature World."
+          description="Nature World łączy artykuły ogrodnicze, dekoracje domowe, produkty sezonowe oraz asortyment zoologiczny."
         />
 
         <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -272,18 +343,19 @@ export default function Main() {
 
       <section className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid gap-6 lg:grid-cols-3">
-          {offerGroups.map((group) => (
+          {offerGroups.map((group, index) => (
             <article
               key={group.title}
-              className="group overflow-hidden rounded-3xl bg-white/80 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+              className="animate-fade-up group overflow-hidden rounded-3xl bg-white/80 shadow-sm ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-primary/20"
+              style={{ animationDelay: `${index * 90}ms` }}
             >
-              <div className="relative aspect-[4/3] bg-white">
+              <div className="relative aspect-[3/2] bg-white">
                 <Image
                   src={`/api/image/${group.image}`}
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 33vw, 100vw"
-                  className="object-cover transition duration-300 group-hover:scale-105"
+                  className="object-contain transition duration-300 group-hover:scale-105"
                 />
               </div>
 
@@ -311,14 +383,93 @@ export default function Main() {
         </div>
       </section>
 
+      <section className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <SectionHeader
+              eyebrow="Sezon w ogrodzie"
+              title="Od nasion po dekoracje"
+              description="Wybierz produkty do wysiewu, pielęgnacji roślin, przesadzania, dekorowania domu oraz przygotowania ogrodu na kolejne etapy sezonu."
+            />
+            <Link
+              href="/aktualnosci"
+              className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white transition hover:bg-primary/90"
+            >
+              Zobacz sezonowe wpisy
+              <ArrowRight size={17} />
+            </Link>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {gardenSeason.map((item, index) => (
+              <article
+                key={item.title}
+                className="animate-fade-up rounded-3xl bg-white/80 p-6 shadow-sm ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-primary/20"
+                style={{ animationDelay: `${index * 80}ms` }}
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  {index === 0 && <Sprout size={22} />}
+                  {index === 1 && <Waves size={22} />}
+                  {index === 2 && <Flower2 size={22} />}
+                  {index === 3 && <Sparkles size={22} />}
+                </div>
+                <h3 className="mt-5 text-xl font-semibold">{item.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-text-secondary">
+                  {item.text}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 py-12">
+        <div className="rounded-3xl bg-white/80 p-5 shadow-sm md:p-8">
+          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-background">
+              <Image
+                src="/api/image/strefa_zwierzak.webp"
+                alt="Produkty zoologiczne Nature World"
+                fill
+                sizes="(min-width: 1024px) 45vw, 100vw"
+                className="object-cover transition duration-300 hover:scale-105"
+              />
+            </div>
+
+            <div>
+              <SectionHeader
+                eyebrow="Strefa zwierząt"
+                title="Produkty dla pupili i akwarystyki"
+                description="W ofercie znajdziesz produkty dla psów i kotów, praktyczne akcesoria dla pupili oraz artykuły akwarystyczne."
+              />
+
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                {petZones.map(({ icon: Icon, title, text }) => (
+                  <article
+                    key={title}
+                    className="rounded-2xl bg-background p-5 transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-sm"
+                  >
+                    <Icon className="text-primary" size={28} />
+                    <h3 className="mt-4 font-semibold">{title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-text-secondary">
+                      {text}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="onas" className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid gap-8 rounded-3xl bg-white/80 p-5 shadow-sm md:p-8 lg:grid-cols-2 lg:items-center">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-background">
+          <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-background">
             <Image
-              src="/api/image/o-nas.webp"
+              src="/api/image/main_onas3.webp"
               alt="Nature World"
               fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
+              sizes="(min-width: 1024px) 33vw, 100vw"
               className="object-cover transition duration-300 hover:scale-105"
             />
           </div>
@@ -328,13 +479,14 @@ export default function Main() {
               O nas
             </p>
             <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-4xl">
-              Młody sklep z prostą komunikacją
+              Różnorodny asortyment dla domu, ogrodu i zwierząt
             </h2>
             <p className="mt-5 leading-8 text-text-secondary">
-              Nature World rozwijamy jako sklep dla osób szukających produktów
-              do ogrodu, domu i zwierząt. Strona firmowa ma najpierw pokazywać
-              aktualności i budować wiarygodność marki, a sprzedaż prowadzić do
-              Allegro.
+              Nature World to sklep z szerokim, praktycznym asortymentem: od
+              produktów ogrodniczych i akcesoriów do roślin, przez dekoracje
+              domowe i sezonowe, aż po artykuły zoologiczne dla zwierząt. Na
+              stronie pokazujemy przede wszystkim aktualności, nowości i
+              kategorie, które najlepiej oddają charakter sklepu.
             </p>
 
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -354,16 +506,16 @@ export default function Main() {
 
       <section className="max-w-7xl mx-auto px-4 py-12">
         <SectionHeader
-          eyebrow="Jak działa strona"
-          title="Firmowa baza pod dalszy rozwój sklepu"
-          description="Najpierw publikujemy treści i informacje o marce, a później możemy rozszerzać projekt o pełną sprzedaż, kategorie i produkty."
+          eyebrow="Dlaczego Nature World?"
+          title="Praktyczna oferta do codziennych potrzeb"
+          description="Łączymy produkty do ogrodu, domu i opieki nad zwierzętami, żeby łatwiej znaleźć potrzebne artykuły w jednym miejscu."
         />
 
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {storeFacts.map(({ icon: Icon, title, text }) => (
             <article
               key={title}
-              className="rounded-3xl bg-white/80 p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+              className="animate-fade-up rounded-3xl bg-white/80 p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
               <Icon className="text-primary" size={32} />
               <h3 className="mt-5 text-xl font-semibold">{title}</h3>
@@ -373,25 +525,83 @@ export default function Main() {
         </div>
       </section>
 
-      <section id="kontakt" className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid gap-6 rounded-3xl bg-primary p-6 text-white shadow-sm md:p-8 lg:grid-cols-[1fr_0.85fr]">
+      <section className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid gap-8 rounded-3xl bg-white/80 p-6 shadow-sm md:p-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
+            <SectionHeader
+              eyebrow="Porady i inspiracje"
+              title="Pomysły na ogród, dom i opiekę nad zwierzętami"
+              description="Aktualności pomagają szybko znaleźć nowości, sezonowe propozycje oraz praktyczne wskazówki przy wyborze produktów."
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {newsTopics.map((topic) => (
+              <div
+                key={topic}
+                className="flex gap-3 rounded-2xl bg-background p-4 text-sm font-medium leading-6"
+              >
+                <Newspaper className="mt-0.5 shrink-0 text-primary" size={18} />
+                {topic}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="kontakt" className="max-w-7xl mx-auto px-4 py-12">
+        <div className="animate-fade-up overflow-hidden rounded-3xl bg-primary text-white shadow-xl">
+          <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[0.95fr_1.05fr] lg:p-10">
+            <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">
               Kontakt
             </p>
-            <h2 className="mt-3 text-3xl font-semibold text-white md:text-4xl">
+            <h2 className="mt-3 text-3xl font-semibold !text-white md:text-4xl">
               Chcesz zapytać o ofertę?
             </h2>
             <p className="mt-5 max-w-2xl leading-8 text-white/80">
-              Napisz do nas albo sprawdź aktualną ofertę na Allegro. Dane
-              kontaktowe można podmienić na właściwe przed publikacją.
+              Odwiedź nas w Koszycach Małych, zadzwoń albo sprawdź aktualną
+              ofertę online. Chętnie pomożemy w wyborze produktów do ogrodu,
+              domu i dla zwierząt.
             </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href={`tel:${phoneNumber.replaceAll(" ", "")}`}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-primary transition hover:bg-white/90"
+              >
+                <Phone size={17} />
+                Zadzwoń
+              </Link>
+              <Link
+                href={mapsUrl}
+                target="_blank"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/45 px-6 text-sm font-semibold text-white transition hover:bg-white hover:text-primary"
+              >
+                <MapPin size={17} />
+                Pokaż na mapie
+              </Link>
+            </div>
           </div>
 
-          <div className="grid gap-3">
-            <ContactRow icon={Phone} label="+48 000 000 000" />
-            <ContactRow icon={Mail} label="kontakt@natureworld.pl" />
-            <ContactRow icon={MapPin} label="Sprzedaż internetowa, Polska" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ContactRow
+                icon={Phone}
+                label={phoneNumber}
+                href={`tel:${phoneNumber.replaceAll(" ", "")}`}
+              />
+              <ContactRow
+                icon={Mail}
+                label={emailAddress}
+                href={`mailto:${emailAddress}`}
+              />
+              <ContactRow icon={MapPin} label={storeAddress} href={mapsUrl} />
+              <ContactRow icon={Clock} label={openingHours} />
+            </div>
+          </div>
+
+          <div className="border-t border-white/15 bg-black/10 px-6 py-4 text-sm text-white/75 md:px-8 lg:px-10">
+            Sklep stacjonarny, sprzedaż przez Allegro i wygodne formy dostawy.
           </div>
         </div>
       </section>
@@ -480,17 +690,11 @@ function CompanyHeader() {
   );
 }
 
-function FeaturedNews({
-  post,
-  loading,
-}: {
-  post: NewsPost;
-  loading: boolean;
-}) {
+function FeaturedNews({ post, loading }: { post: NewsPost; loading: boolean }) {
   const image = post.images?.[0] ?? fallbackImage;
 
   return (
-    <article className="group overflow-hidden rounded-3xl bg-white/80 shadow-sm transition hover:shadow-xl">
+    <article className="animate-fade-up group overflow-hidden rounded-3xl bg-white/80 shadow-sm transition hover:shadow-xl">
       <Link href={`/aktualnosci#${post.slug}`} className="block">
         <div className="relative aspect-[16/9] bg-white">
           <Image
@@ -567,8 +771,9 @@ function CompanyFooter() {
             />
           </Link>
           <p className="mt-5 max-w-sm text-sm leading-7 text-text-secondary">
-            Nature World to sklep ogrodniczo-zoologiczny rozwijany wokół
-            aktualności, sezonowej oferty i wygodnych zakupów online.
+            Nature World to sklep ogrodniczo-zoologiczny z ofertą stacjonarną i
+            online, rozwijany wokół sezonowych produktów, praktycznych
+            inspiracji i wygodnych zakupów.
           </p>
           <div className="mt-6 flex gap-3">
             <Link
@@ -605,7 +810,11 @@ function CompanyFooter() {
             <a href="#kontakt" className="hover:text-primary">
               Kontakt
             </a>
-            <Link href={allegroUrl} target="_blank" className="hover:text-primary">
+            <Link
+              href={allegroUrl}
+              target="_blank"
+              className="hover:text-primary"
+            >
               Allegro
             </Link>
           </nav>
@@ -627,19 +836,19 @@ function CompanyFooter() {
           <div className="mt-5 grid gap-3 text-sm text-text-secondary">
             <p className="flex items-center gap-2">
               <Phone className="text-primary" size={16} />
-              +48 000 000 000
+              {phoneNumber}
             </p>
             <p className="flex items-center gap-2">
               <Mail className="text-primary" size={16} />
-              kontakt@natureworld.pl
+              {emailAddress}
             </p>
             <p className="flex items-center gap-2">
               <MapPin className="text-primary" size={16} />
-              Sprzedaż internetowa, Polska
+              {storeAddress}
             </p>
             <p className="flex items-center gap-2">
               <Clock className="text-primary" size={16} />
-              Obsługa online
+              {openingHours}
             </p>
           </div>
         </div>
@@ -647,15 +856,18 @@ function CompanyFooter() {
 
       <div className="border-t border-black/5">
         <div className="max-w-7xl mx-auto flex flex-col gap-4 px-4 py-6 text-sm text-text-secondary md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} Nature World. Wszelkie prawa zastrzeżone.</p>
+          <p>
+            © {new Date().getFullYear()} Nature World. Wszelkie prawa
+            zastrzeżone.
+          </p>
           <div className="flex flex-wrap gap-4">
             <span className="inline-flex items-center gap-2">
               <Truck size={16} className="text-primary" />
-              Wysyłka przez kanał sprzedaży
+              Sklep stacjonarny
             </span>
             <span className="inline-flex items-center gap-2">
               <ShieldCheck size={16} className="text-primary" />
-              Zakupy na Allegro
+              Allegro i dostawa
             </span>
           </div>
         </div>
@@ -668,7 +880,7 @@ function NewsCard({ post }: { post: NewsPost }) {
   return (
     <Link
       href={`/aktualnosci#${post.slug}`}
-      className="group overflow-hidden rounded-2xl bg-white/80 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+      className="animate-fade-up group overflow-hidden rounded-2xl bg-white/80 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
     >
       <div className="relative aspect-video bg-white">
         <Image
@@ -732,7 +944,7 @@ function CategoryCard({
   text: string;
 }) {
   return (
-    <article className="rounded-2xl bg-white/80 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+    <article className="animate-fade-up rounded-2xl bg-white/80 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
       <Icon className="text-primary" size={30} />
       <h3 className="mt-5 text-xl font-semibold">{title}</h3>
       <p className="mt-3 text-sm leading-7 text-text-secondary">{text}</p>
@@ -740,11 +952,37 @@ function CategoryCard({
   );
 }
 
-function ContactRow({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-4 text-white">
+function ContactRow({
+  icon: Icon,
+  label,
+  href,
+}: {
+  icon: LucideIcon;
+  label: string;
+  href?: string;
+}) {
+  const content = (
+    <>
       <Icon className="shrink-0" size={20} />
       <span className="font-medium">{label}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        target={href.startsWith("http") ? "_blank" : undefined}
+        className="flex items-center gap-3 rounded-2xl bg-white/10 p-4 text-white transition hover:-translate-y-0.5 hover:bg-white/20"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-4 text-white">
+      {content}
     </div>
   );
 }
