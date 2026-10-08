@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import AddToCartButton from "./AddButton";
 import { Product } from "../models/product";
+import { getProductImageUrl } from "@/app/lib/product-images";
 
 type ProductCardProps = {
   product: Product;
@@ -27,7 +28,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="flex flex-row md:flex-col">
         {/* IMAGE – 50% */}
         <Link
-          href={`/produkt/${product.slug}`}
+          href={`/sklep/produkt/${product.slug}`}
           className="block w-1/2 md:w-full shrink-0"
         >
           <div
@@ -42,10 +43,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           >
             {product.images?.[0] && (
               <Image
-                src={`/api/image/${product.images[0] + "_thumb.webp"}`}
+                src={getProductImageUrl(product.images[0], "thumb")}
                 alt={product.name}
                 fill
                 sizes="(max-width: 768px) 50vw, 33vw"
+                unoptimized
                 className="
                   object-contain
                   transition-transform
@@ -69,7 +71,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           "
         >
           {/* NAME */}
-          <Link href={`/produkt/${product.slug}`}>
+          <Link href={`/sklep/produkt/${product.slug}`}>
             <p
               className="
                 font-medium

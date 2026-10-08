@@ -44,12 +44,12 @@ export default function Footer() {
 
           <ul className="space-y-2 text-sm text-text-secondary">
             <li>
-              <Link href="/kategoria/ogrod" className="hover:text-primary">
+              <Link href="/sklep/kategoria/ogrod" className="hover:text-primary">
                 Ogród
               </Link>
             </li>
             <li>
-              <Link href="/kategoria/zwierzeta" className="hover:text-primary">
+              <Link href="/sklep/kategoria/zwierzeta" className="hover:text-primary">
                 Zwierzęta
               </Link>
             </li>

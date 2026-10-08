@@ -1,17 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { getCategories } from "@/app/lib/firestore-categories";
 import { buildCategoryTree, CategoryTree } from "@/app/lib/categories";
-import { ChevronDown } from "lucide-react";
+import { getPrimaryStorefrontCategories } from "@/app/lib/storefront-categories";
 import { extraMenuLinks } from "@/app/lib/menu-links";
 
 export default function Categories() {
   const [tree, setTree] = useState<CategoryTree[] | null>(null);
-  const [openId, setOpenId] = useState<string | null>(null);
-
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -19,21 +16,8 @@ export default function Categories() {
       setTree(buildCategoryTree(categories));
     };
 
-    load();
+    load().catch(() => setTree([]));
   }, []);
-
-  const openMenu = (id: string) => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-    }
-    setOpenId(id);
-  };
-
-  const closeMenu = () => {
-    closeTimeoutRef.current = setTimeout(() => {
-      setOpenId(null);
-    }, 250);
-  };
 
   if (!tree) {
     return (
@@ -50,30 +34,18 @@ export default function Categories() {
     );
   }
 
+  const primaryCategories = getPrimaryStorefrontCategories(tree);
+
   return (
     <nav className="bg-primary relative z-40 md:block hidden">
-      <ul className="flex max-w-7xl mx-auto px-4 p-1 justify-between">
-        {tree.map((cat) => (
-          <li
-            key={cat.id}
-            onMouseEnter={() => openMenu(cat.id)}
-            onMouseLeave={closeMenu}
-          >
+      <ul className="mx-auto flex max-w-7xl flex-wrap justify-start gap-x-2 px-4 p-1">
+        {primaryCategories.map((category) => (
+          <li key={category.id}>
             <Link
-              href={`/kategoria/${cat.slug}`}
-              onClick={() => setOpenId(null)}
-              className="flex items-center gap-1 px-4 py-3 font-bold text-white hover:bg-green-800"
+              href={`/sklep/kategoria/${category.slugPath.join("/")}`}
+              className="flex items-center gap-1 whitespace-nowrap px-4 py-3 font-bold text-white hover:bg-green-800"
             >
-              {cat.name}
-
-              {cat.children.length > 0 && (
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform ${
-                    openId === cat.id ? "rotate-180" : ""
-                  }`}
-                />
-              )}
+              {category.label}
             </Link>
           </li>
         ))}
@@ -83,8 +55,7 @@ export default function Categories() {
           <li key={item.href}>
             <Link
               href={item.href}
-              onClick={() => setOpenId(null)}
-              className={`block px-4 py-3 font-bold text-white hover:bg-green-800 ${
+              className={`block whitespace-nowrap px-4 py-3 font-bold text-white hover:bg-green-800 ${
                 item.highlight ? "text-accent" : ""
               }`}
             >
@@ -93,54 +64,6 @@ export default function Categories() {
           </li>
         ))}
       </ul>
-
-      {/* 🔥 MEGA MENU GLOBAL (FULL WIDTH) */}
-      {tree.map((cat) =>
-        cat.children.length > 0 ? (
-          <div
-            key={cat.id}
-            onMouseEnter={() => openMenu(cat.id)}
-            onMouseLeave={closeMenu}
-            className={`
-              absolute left-0 w-full top-full bg-background shadow-lg
-              transition-all duration-150 ease-out
-              ${
-                openId === cat.id
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 -translate-y-2 pointer-events-none"
-              }
-            `}
-          >
-            <div className="max-w-7xl mx-auto grid grid-cols-4 gap-6 p-6">
-              {cat.children.map((sub) => (
-                <div key={sub.id}>
-                  <Link
-                    href={`/kategoria/${cat.slug}/${sub.slug}`}
-                    onClick={() => setOpenId(null)}
-                    className="font-semibold block mb-2 hover:underline"
-                  >
-                    {sub.name}
-                  </Link>
-
-                  <ul className="space-y-1">
-                    {sub.children.map((child) => (
-                      <li key={child.id}>
-                        <Link
-                          href={`/kategoria/${cat.slug}/${sub.slug}/${child.slug}`}
-                          onClick={() => setOpenId(null)}
-                          className="text-sm text-text-secondary hover:text-primary"
-                        >
-                          {child.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null,
-      )}
     </nav>
   );
 }

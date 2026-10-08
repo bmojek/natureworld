@@ -17,19 +17,20 @@ export function findCategoryBySlugPath(
 }
 
 export function collectCategoryIds(category: CategoryTree): string[] {
-  const ids = [category.id];
+  const ids = /^\d+$/.test(category.id) ? [category.id] : [];
   for (const child of category.children) {
     ids.push(...collectCategoryIds(child));
   }
   return ids;
 }
-export function findParentCategory(tree: any[], parentId: string | null) {
+export function findParentCategory(tree: CategoryTree[], parentId: string | null) {
   if (!parentId) return null;
 
   const stack = [...tree];
 
   while (stack.length) {
     const node = stack.pop();
+    if (!node) continue;
     if (node.id === parentId) return node;
     if (node.children) stack.push(...node.children);
   }

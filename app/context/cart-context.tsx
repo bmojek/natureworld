@@ -5,9 +5,11 @@ import { CartItem } from "@/app/models/cart";
 
 type CartContextType = {
   items: CartItem[];
+  ready: boolean;
   addItem: (item: CartItem) => void;
   removeItem: (productId: string) => void;
   updateQty: (productId: string, qty: number) => void;
+  clearCart: () => void;
 
   total: number;
 };
@@ -16,17 +18,26 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [ready, setReady] = useState(false);
 
-  // 🔹 load from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("cart");
-    if (saved) setItems(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem("cart");
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved);
+        if (Array.isArray(parsed)) setItems(parsed as CartItem[]);
+      }
+    } catch {
+      localStorage.removeItem("cart");
+    } finally {
+      setReady(true);
+    }
   }, []);
 
-  // 🔹 save to localStorage
   useEffect(() => {
+    if (!ready) return;
     localStorage.setItem("cart", JSON.stringify(items));
-  }, [items]);
+  }, [items, ready]);
 
   const addItem = (item: CartItem) => {
     setItems((prev) => {
@@ -50,11 +61,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const clearCart = () => setItems([]);
+
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQty, total }}
+      value={{ items, ready, addItem, removeItem, updateQty, clearCart, total }}
     >
       {children}
     </CartContext.Provider>

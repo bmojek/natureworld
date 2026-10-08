@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/app/context/cart-context";
+import { getProductImageUrl } from "@/app/lib/product-images";
 
 export default function CartPage() {
   const { items, updateQty, removeItem, total } = useCart();
@@ -42,14 +43,15 @@ export default function CartPage() {
             >
               {/* IMAGE */}
               <Link
-                href={`/produkt/${item.slug}`}
+                href={`/sklep/produkt/${item.slug}`}
                 className="w-20 h-20 bg-bg-muted rounded-md  overflow-hidden flex items-center justify-center"
               >
                 <Image
-                  src={`/api/image/${item.image + "_thumb.webp"}`}
+                  src={getProductImageUrl(item.image, "thumb")}
                   alt={item.name}
                   width={80}
                   height={80}
+                  unoptimized
                   className="object-contain"
                 />
               </Link>
@@ -100,7 +102,7 @@ export default function CartPage() {
       {/* ================= RIGHT ================= */}
       <aside className="w-full lg:w-96 bg-bg-muted rounded-xl p-6 space-y-5 h-fit lg:sticky lg:top-24">
         <Link
-          href="/checkout"
+          href="/sklep/checkout"
           className="block bg-primary hover:opacity-90 text-white text-center font-semibold py-3 rounded-full"
         >
           Przejdź do kasy

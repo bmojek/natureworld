@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getProductImageUrl } from "@/app/lib/product-images";
 
 export default function ProductGallery({
   images,
@@ -66,10 +67,11 @@ export default function ProductGallery({
 
         <div className="relative w-full aspect-square overflow-hidden rounded-xl">
           <Image
-            src={`/api/image/${images[active]}_main.webp`}
+            src={getProductImageUrl(images[active], "main")}
             alt={name}
             fill
             sizes="(max-width: 768px) 100vw, 520px"
+            unoptimized
             className="object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </div>
@@ -90,10 +92,11 @@ export default function ProductGallery({
               }`}
           >
             <Image
-              src={`/api/image/${img}_thumb.webp`}
+              src={getProductImageUrl(img, "thumb")}
               alt=""
               width={80}
               height={80}
+              unoptimized
               className="object-contain"
             />
           </button>

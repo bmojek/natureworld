@@ -1,32 +1,19 @@
-import Fuse from "fuse.js";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "./firebase";
+import { Product } from "@/app/models/product";
 
-let cache: any[] = [];
-let fuse: Fuse<any> | null = null;
-
-export async function searchProducts(query: string) {
+export async function searchProducts(query: string): Promise<Product[]> {
   if (!query) return [];
 
-  // 🔥 cache produktów (ważne)
-  if (cache.length === 0) {
-    const snap = await getDocs(collection(db, "products"));
+  try {
+    const response = await fetch(
+      `/api/products?search=${encodeURIComponent(query)}`,
+      { cache: "no-store" },
+    );
 
-    cache = snap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    if (!response.ok) return [];
 
-    fuse = new Fuse(cache, {
-      keys: ["name"],
-      threshold: 0.3, // im niżej tym dokładniej
-      ignoreLocation: true,
-    });
+    const data = (await response.json()) as { products?: Product[] };
+    return Array.isArray(data.products) ? data.products : [];
+  } catch {
+    return [];
   }
-
-  if (!fuse) return [];
-
-  const results = fuse.search(query);
-
-  return results.slice(0, 10).map((r) => r.item);
 }

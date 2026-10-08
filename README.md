@@ -1,3 +1,24 @@
+# Nature World
+
+Sklep oparty na Next.js. Kategorie, produkty, ceny i stany są pobierane z katalogu Base po stronie serwera.
+
+## Uruchomienie
+
+```bash
+npm install
+npm run dev
+```
+
+Utwórz lokalny plik `.env.local` na podstawie `.env.example`. Nie zapisuj tokena BaseLinker w repozytorium ani w zmiennych `NEXT_PUBLIC_*`.
+
+## Podział danych
+
+- BaseLinker jest źródłem kategorii, produktów, cen i stanów.
+- Firebase Authentication obsługuje logowanie i nie wymaga Firestore.
+- Firestore pozostaje używany dla treści redakcyjnych i starego panelu kategorii.
+- Checkout, płatności i tworzenie zamówień w Base nie są jeszcze wdrożone.
+
+Zobacz [BASELINKER.md](BASELINKER.md) przed dalszą implementacją integracji.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

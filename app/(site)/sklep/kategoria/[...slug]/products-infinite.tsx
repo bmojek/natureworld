@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { Product } from "@/app/models/product";
 import ProductCard from "@/app/components/ProductCard";
 
@@ -15,8 +13,7 @@ export default function ProductsInfinite({
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [end, setEnd] = useState(false);
-  const [sort, setSort] = useState("popular");
-
+  const [catalogUnavailable, setCatalogUnavailable] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   /* ================= LOAD ================= */
@@ -29,33 +26,44 @@ export default function ProductsInfinite({
 
     const url = new URL("/api/products", window.location.origin);
     url.searchParams.set("categoryIds", categoryIds.join(","));
-    url.searchParams.set("sort", sort);
-
     if (cursor && !reset) {
       url.searchParams.set("cursor", cursor);
     }
 
-    const res = await fetch(url.toString());
-    const data = await res.json();
+    try {
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        setCatalogUnavailable(true);
+        setEnd(true);
+        return;
+      }
 
-    if (data.products.length === 0) {
+      const data = (await res.json()) as {
+        products: Product[];
+        cursor: string | null;
+      };
+
+      if (data.products.length === 0) {
+        setEnd(true);
+      } else {
+        setProducts((prev) => {
+          if (reset) return data.products;
+
+          const existingIds = new Set(prev.map((p) => p.id));
+          const uniqueNew = data.products.filter(
+            (product) => !existingIds.has(product.id),
+          );
+
+          return [...prev, ...uniqueNew];
+        });
+        setCursor(data.cursor);
+      }
+    } catch {
+      setCatalogUnavailable(true);
       setEnd(true);
-    } else {
-      setProducts((prev) => {
-        if (reset) return data.products;
-
-        const existingIds = new Set(prev.map((p) => p.id));
-
-        const uniqueNew = data.products.filter(
-          (p: Product) => !existingIds.has(p.id),
-        );
-
-        return [...prev, ...uniqueNew];
-      });
-      setCursor(data.cursor);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   /* ================= INITIAL LOAD ================= */
@@ -63,15 +71,6 @@ export default function ProductsInfinite({
   useEffect(() => {
     load(true);
   }, []);
-
-  /* ================= SORT CHANGE ================= */
-
-  useEffect(() => {
-    setProducts([]);
-    setCursor(null);
-    setEnd(false);
-    load(true);
-  }, [sort]);
 
   /* ================= INFINITE SCROLL ================= */
 
@@ -91,25 +90,24 @@ export default function ProductsInfinite({
 
   return (
     <>
-      {/* SORT */}
-      <div className="mb-4 flex justify-end">
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="border rounded px-3 py-2 text-sm"
-        >
-          <option value="popular">Popularne</option>
-          <option value="price-asc">Cena rosnąco</option>
-          <option value="price-desc">Cena malejąco</option>
-        </select>
-      </div>
-
       {/* PRODUCTS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
-      </div>
+      {catalogUnavailable ? (
+        <div className="border border-amber-300 bg-amber-50 p-6 text-sm text-amber-950">
+          Nie udało się pobrać produktów z magazynu Base. Spróbuj ponownie za chwilę.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      )}
+
+      {!catalogUnavailable && end && products.length === 0 && (
+        <p className="mt-6 text-sm text-text-secondary">
+          Brak produktów w tej kategorii.
+        </p>
+      )}
 
       {!end && (
         <div ref={sentinelRef} className="h-10 mt-10 flex justify-center">

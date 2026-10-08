@@ -37,7 +37,10 @@ type NewsPost = {
   excerpt?: string;
   content?: string;
   images?: string[];
-  publishedAt?: any;
+  publishedAt?: Date | string | number | {
+    seconds?: number;
+    _seconds?: number;
+  };
 };
 
 const facebookUrl = "https://www.facebook.com/p/Nature-World-61573608614787/";
@@ -207,20 +210,22 @@ const newsTopics = [
   "komunikaty organizacyjne Nature World",
 ];
 
-function formatDate(value: any) {
+function formatDate(value: NewsPost["publishedAt"]) {
   if (!value) return "";
 
-  if (value.seconds) {
+  if (value instanceof Date) {
+    return value.toLocaleDateString("pl-PL");
+  }
+
+  if (typeof value === "object" && "seconds" in value && value.seconds) {
     return new Date(value.seconds * 1000).toLocaleDateString("pl-PL");
   }
 
-  if (value._seconds) {
+  if (typeof value === "object" && "_seconds" in value && value._seconds) {
     return new Date(value._seconds * 1000).toLocaleDateString("pl-PL");
   }
 
-  if (value.toDate) {
-    return value.toDate().toLocaleDateString("pl-PL");
-  }
+  if (typeof value === "object") return "";
 
   return new Date(value).toLocaleDateString("pl-PL");
 }
@@ -279,14 +284,23 @@ export default function Main() {
                 Sprawdzaj nowe produkty, sezonowe inspiracje, porady ogrodnicze
                 oraz informacje o ofercie dla domu i zwierząt.
               </p>
-              <Link
-                href={allegroUrl}
-                target="_blank"
-                className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-primary transition hover:bg-white/90"
-              >
-                <ShoppingBag size={17} />
-                Oferta na Allegro
-              </Link>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link
+                  href="/sklep"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-primary transition hover:bg-white/90"
+                >
+                  <Store size={17} />
+                  Przejdź do sklepu
+                </Link>
+                <Link
+                  href={allegroUrl}
+                  target="_blank"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/40 px-6 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  <ShoppingBag size={17} />
+                  Oferta na Allegro
+                </Link>
+              </div>
             </div>
 
             <div className="animate-fade-up rounded-3xl bg-white/80 p-6 shadow-sm [animation-delay:220ms]">

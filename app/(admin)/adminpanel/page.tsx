@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import ProductsForm from "./products-form";
 import CategoriesForm from "./categories-form";
 import PostsForm from "./posts-form";
 import { useAuth } from "@/app/context/auth-context";
-import ImportPage from "./import-form";
 
-type Tab = "products" | "categories" | "posts" | "import";
+type Tab = "categories" | "posts";
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<Tab>("products");
+  const [tab, setTab] = useState<Tab>("categories");
   const { user } = useAuth();
   const adminAccounts =
     process.env.NEXT_PUBLIC_ADMINACCOUNTS?.split(",").map((e) => e.trim()) ??
@@ -25,17 +23,6 @@ export default function AdminPage() {
 
       {/* ZAKŁADKI */}
       <div className="flex gap-4 border-b mb-8">
-        <button
-          onClick={() => setTab("products")}
-          className={`pb-2 font-medium ${
-            tab === "products"
-              ? "border-b-2 border-primary text-primary"
-              : "text-text-secondary"
-          }`}
-        >
-          Produkty
-        </button>
-
         <button
           onClick={() => setTab("categories")}
           className={`pb-2 font-medium ${
@@ -56,23 +43,11 @@ export default function AdminPage() {
         >
           Posty
         </button>
-        <button
-          onClick={() => setTab("import")}
-          className={`pb-2 font-medium ${
-            tab === "import"
-              ? "border-b-2 border-primary text-primary"
-              : "text-text-secondary"
-          }`}
-        >
-          Import
-        </button>
       </div>
 
       {/* CONTENT */}
-      {tab === "products" && <ProductsForm />}
       {tab === "categories" && <CategoriesForm />}
       {tab === "posts" && <PostsForm />}
-      {tab === "import" && <ImportPage />}
     </main>
   );
 }

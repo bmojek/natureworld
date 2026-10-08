@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, User, Heart, LogOut, Menu, Search } from "lucide-react";
+import { ShoppingCart, User, Heart, Menu, Search } from "lucide-react";
 import { useAuth } from "@/app/context/auth-context";
 import { useCart } from "@/app/context/cart-context";
 import { useEffect, useRef, useState } from "react";
 import Categories from "./Categories";
 import MobileCategories from "./MobileCategories";
 import { searchProducts } from "@/app/lib/search";
+import { Product } from "@/app/models/product";
+import { getProductImageUrl } from "@/app/lib/product-images";
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -18,7 +20,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<Product[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -52,21 +54,19 @@ export default function Header() {
   useEffect(() => {
     const trimmed = query.trim();
 
-    // 🔥 MIN 3 ZNAKI
-    if (trimmed.length < 3) {
-      setResults([]);
-      setSearchOpen(false);
-      return;
-    }
+    if (trimmed.length < 3) return;
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
-      const res = await searchProducts(trimmed);
-      setResults(res);
-      setSearchOpen(true);
-      setLoading(false);
+      try {
+        const res = await searchProducts(trimmed);
+        setResults(res);
+        setSearchOpen(true);
+      } finally {
+        setLoading(false);
+      }
     }, 300);
   }, [query]);
   return (
@@ -97,7 +97,14 @@ export default function Header() {
             <div className="flex w-full border border-black/10 bg-background rounded-md overflow-hidden">
               <input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setQuery(value);
+                  if (value.trim().length < 3) {
+                    setResults([]);
+                    setSearchOpen(false);
+                  }
+                }}
                 placeholder="Szukaj produktów..."
                 className="flex-1 px-3 py-2 text-sm outline-none"
               />
@@ -122,15 +129,16 @@ export default function Header() {
                   results.map((item) => (
                     <Link
                       key={item.id}
-                      href={`/produkt/${item.slug}`}
+                      href={`/sklep/produkt/${item.slug}`}
                       onClick={() => setSearchOpen(false)}
                       className="flex items-center gap-3 p-3 hover:bg-gray-50 transition"
                     >
                       <Image
-                        src={`/api/image/${item.images?.[0] + "_thumb.webp"}`}
+                        src={getProductImageUrl(item.images?.[0], "thumb")}
                         alt={item.name}
                         width={60}
                         height={60}
+                        unoptimized
                         className="object-contain rounded"
                       />
 
@@ -164,7 +172,7 @@ export default function Header() {
                     </div>
 
                     <Link
-                      href="/profil"
+                      href="/sklep/profil"
                       onClick={() => setUserOpen(false)}
                       className="block px-4 py-2 hover:bg-gray-50"
                     >
@@ -172,7 +180,7 @@ export default function Header() {
                     </Link>
 
                     <Link
-                      href="/zamowienia"
+                      href="/sklep/zamowienia"
                       onClick={() => setUserOpen(false)}
                       className="block px-4 py-2 hover:bg-gray-50"
                     >
@@ -211,7 +219,7 @@ export default function Header() {
               <Heart size={24} />
             </Link>
 
-            <Link href="/koszyk" className="relative">
+            <Link href="/sklep/koszyk" className="relative">
               {cart.items.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {cart.items.length}

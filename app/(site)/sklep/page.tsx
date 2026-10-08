@@ -2,160 +2,108 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, Boxes } from "lucide-react";
 import { useEffect, useState } from "react";
-import ProductRow from "@/app/components/ProductRow";
-import PostsSnippet from "@/app/components/PostsSnippet";
-import { Product } from "@/app/models/product";
-/* ================= KARUZELA ================= */
+import { CategoryModel } from "@/app/models/category";
+import { buildCategoryTree, CategoryTree } from "@/app/lib/categories";
 
-const banners = ["bilbordsharp.webp", "banerwide2.webp"];
-
-const demoProducts: Product[] = Array.from({ length: 4 }).map((_, i) => ({
-  id: String(i),
-
-  name: `Produkt ${i + 1}`,
-
-  slug: "przykladowy-produkt",
-
-  price: 19.99 + i,
-
-  images: ["grabki-szerokie-113x392-cm-geolia-n1_0"],
-  sku: `SKU${1000 + i}`,
-  content: "Opis produktu",
-  categoryIds: [],
-
-  stock: 10,
-
-  isActive: true,
-
-  createdAt: new Date(),
-}));
-
-function BannerCarousel() {
-  const [index, setIndex] = useState(0);
+export default function Home() {
+  const [categories, setCategories] = useState<CategoryTree[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categoryError, setCategoryError] = useState(false);
 
   useEffect(() => {
-    if (banners.length <= 1) return;
-
-    const id = setInterval(() => {
-      setIndex((prev) => (prev + 1) % banners.length);
-    }, 5000);
-
-    return () => clearInterval(id);
+    fetch("/api/categories")
+      .then((response) => {
+        if (!response.ok) throw new Error("Nie udało się pobrać kategorii");
+        return response.json() as Promise<CategoryModel[]>;
+      })
+      .then((data) => setCategories(buildCategoryTree(data)))
+      .catch(() => {
+        setCategories([]);
+        setCategoryError(true);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden bg-background">
-      <div className="relative w-full aspect-3/1 sm:aspect-5/2 md:aspect-16/5">
-        {banners.map((img, i) => (
-          <Image
-            key={i}
-            src={`/api/image/${img}`}
-            alt="Banner"
-            fill
-            priority={i === 0}
-            sizes="100vw"
-            className={`object-contain absolute inset-0 transition-opacity duration-700 ${
-              i === index ? "opacity-100" : "opacity-0"
-            }`}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ================= HOME ================= */
-
-export default function Home() {
-  return (
-    <main>
-      {/* ===== BANNER ===== */}
-
-      <BannerCarousel />
-
-      {/* ===== CONTENT ===== */}
-
-      <div className="max-w-7xl mx-auto px-4 py-10 space-y-10">
-        {/* ================= HERO ================= */}
-
-        <section className="text-center space-y-4">
-          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-            Wszystko dla zwierząt i ogrodu
-          </h1>
-
-          <p className="text-text-secondary max-w-2xl mx-auto">
-            Sklep zoologiczno-ogrodniczy – karma, akcesoria, nawozy, rośliny i
-            naturalne rozwiązania dla domu i ogrodu
+    <main className="min-h-screen">
+      <section className="relative isolate overflow-hidden bg-[#173d2b] text-white">
+        <Image
+          src="/api/image/main_ogrod.webp"
+          alt="Rośliny i produkty do ogrodu"
+          fill
+          priority
+          sizes="100vw"
+          className="-z-20 object-cover opacity-35"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102c20] via-[#173d2b]/85 to-transparent" />
+        <div className="mx-auto flex min-h-80 max-w-7xl flex-col justify-center px-6 py-16">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-lime-200">
+            Nature World
           </p>
+          <h1 className="max-w-2xl text-4xl font-semibold md:text-5xl">
+            Sklep dla domu, ogrodu i zwierząt
+          </h1>
+          <p className="mt-4 max-w-xl text-white/80">
+            Przeglądaj działy i aktualne produkty dostępne w katalogu sklepu.
+          </p>
+        </div>
+      </section>
 
-          <div className="flex justify-center gap-4 pt-2">
-            <Link
-              href="/kategoria/ogrod"
-              className="bg-primary text-white px-6 py-3 font-medium"
-            >
-              Ogród
-            </Link>
-
-            <Link
-              href="/kategoria/zwierzeta"
-              className="border px-6 py-3 font-medium"
-            >
-              Zwierzęta
-            </Link>
-          </div>
-        </section>
-
-        {/* ================= NEWS ================= */}
-
-        <PostsSnippet />
-
-        {/* ================= FEATURED ================= */}
-
-        <ProductRow
-          title="Promocje"
-          href="/kategoria/promocje"
-          products={demoProducts}
-        />
-
-        {/* ================= ROWS ================= */}
-
-        <ProductRow
-          title="Dla psa"
-          href="/kategoria/psy"
-          products={demoProducts}
-        />
-
-        <ProductRow
-          title="Dla kota"
-          href="/kategoria/koty"
-          products={demoProducts}
-        />
-
-        <ProductRow
-          title="Ogród"
-          href="/kategoria/ogrodniczy"
-          products={demoProducts}
-        />
-
-        {/* ================= USP ================= */}
-
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center  pt-10">
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <p className="text-lg font-semibold">Darmowa dostawa</p>
-            <p className="text-sm text-text-secondary">od 99 zł</p>
+            <p className="text-sm font-medium text-primary">Oferta</p>
+            <h2 className="mt-1 text-2xl font-semibold">Wybierz kategorię</h2>
           </div>
+          <Link href="/aktualnosci" className="hidden items-center gap-2 text-sm font-medium hover:text-primary sm:flex">
+            Aktualności <ArrowRight size={16} />
+          </Link>
+        </div>
 
-          <div>
-            <p className="text-lg font-semibold">30 dni na zwrot</p>
-            <p className="text-sm text-text-secondary">bez problemu</p>
+        {loading ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="h-24 animate-pulse bg-black/5" />
+            ))}
           </div>
-
-          <div>
-            <p className="text-lg font-semibold">Naturalne produkty</p>
-            <p className="text-sm text-text-secondary">dla zwierząt i ogrodu</p>
+        ) : categories.length > 0 ? (
+          <div className="grid gap-px overflow-hidden border border-black/10 bg-black/10 sm:grid-cols-2 lg:grid-cols-3">
+            {categories.map((category, index) => (
+              <Link
+                key={category.id}
+                href={`/sklep/kategoria/${category.slug}`}
+                className="group flex min-h-28 items-center justify-between bg-white p-6 transition-colors hover:bg-[#f2f7ee]"
+              >
+                <span>
+                  <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-lg font-semibold">{category.name}</span>
+                  <span className="mt-1 block text-sm text-text-secondary">
+                    {category.children.length > 0
+                      ? `${category.children.length} działów`
+                      : "Zobacz produkty"}
+                  </span>
+                </span>
+                <ArrowRight className="text-primary transition-transform group-hover:translate-x-1" size={20} />
+              </Link>
+            ))}
           </div>
-        </section>
+        ) : (
+          <div className="border border-black/10 px-6 py-10 text-center">
+            <Boxes className="mx-auto mb-3 text-primary" size={28} />
+            <h3 className="font-semibold">
+              {categoryError ? "Katalog Base jest chwilowo niedostępny" : "Brak kategorii w katalogu"}
+            </h3>
+            <p className="mt-2 text-sm text-text-secondary">
+              {categoryError
+                ? "Nie udało się pobrać kategorii. Spróbuj ponownie za chwilę."
+                : "W Base nie ma jeszcze kategorii do wyświetlenia."}
+            </p>
+          </div>
+        )}
       </div>
     </main>
   );

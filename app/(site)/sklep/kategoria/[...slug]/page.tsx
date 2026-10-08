@@ -2,8 +2,8 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { buildCategoryTree } from "@/app/lib/categories";
 import {
-  findCategoryBySlugPath,
   collectCategoryIds,
+  findCategoryBySlugPath,
   findParentCategory,
 } from "@/app/lib/category-utils";
 import ProductsInfinite from "./products-infinite";
@@ -34,7 +34,7 @@ async function fetchCategories(): Promise<CategoryModel[]> {
   });
 
   if (!res.ok) {
-    throw new Error("Failed to fetch categories");
+    return [];
   }
 
   return res.json();
@@ -46,6 +46,17 @@ export default async function CategoryPage({ params }: PageProps) {
 
   // ✅ API zamiast Firestore
   const categories = await fetchCategories();
+  if (categories.length === 0) {
+    return (
+      <main className="mx-auto min-h-screen max-w-7xl px-6 py-16">
+        <h1 className="text-2xl font-semibold">Kategorie chwilowo niedostępne</h1>
+        <p className="mt-3 text-text-secondary">
+          Po skonfigurowaniu połączenia z Base pojawi się tu katalog produktów.
+        </p>
+      </main>
+    );
+  }
+
   const tree = buildCategoryTree(categories);
 
   const category = findCategoryBySlugPath(tree, slug);
@@ -67,7 +78,7 @@ export default async function CategoryPage({ params }: PageProps) {
           {/* ⬆️ POWRÓT WYŻEJ */}
           {parentCategory && (
             <Link
-              href={`/kategoria/${slug.slice(0, -1).join("/")}`}
+              href={`/sklep/kategoria/${slug.slice(0, -1).join("/")}`}
               className="block text-sm text-primary mb-3"
             >
               ← {parentCategory.name}
@@ -80,7 +91,7 @@ export default async function CategoryPage({ params }: PageProps) {
               {category.children.map((child) => (
                 <li key={child.id}>
                   <Link
-                    href={`/kategoria/${[...slug, child.slug].join("/")}`}
+                    href={`/sklep/kategoria/${[...slug, child.slug].join("/")}`}
                     className="text-sm hover:underline"
                   >
                     {child.name}
@@ -93,34 +104,20 @@ export default async function CategoryPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* FILTRY */}
-        <div>
-          <h2 className="font-semibold text-lg mb-3">Filtry</h2>
-
-          <div className="mb-4">
-            <p className="font-medium mb-2">Cena</p>
-            <input type="range" min={0} max={500} className="w-full " />
-          </div>
-
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
-            Tylko dostępne
-          </label>
-        </div>
       </aside>
 
       {/* ================= PRODUKTY ================= */}
       <section className="md:col-span-3">
         {/* BREADCRUMBS */}
         <nav className="text-sm text-text-secondary mb-4 flex items-center gap-1">
-          <Link href="/" className="flex items-center">
+          <Link href="/sklep" className="flex items-center">
             <House size={14} />
           </Link>
 
           {slug.map((s, i) => (
             <span key={i} className="flex items-center gap-1">
               <span>/</span>
-              <Link href={`/kategoria/${slug.slice(0, i + 1).join("/")}`}>
+              <Link href={`/sklep/kategoria/${slug.slice(0, i + 1).join("/")}`}>
                 {capitalizeFirstLetter(s.replaceAll("-", " "))}
               </Link>
             </span>
@@ -129,7 +126,13 @@ export default async function CategoryPage({ params }: PageProps) {
 
         <h1 className="text-2xl font-bold mb-6">{category.name}</h1>
 
-        <ProductsInfinite categoryIds={categoryIds} />
+        {categoryIds.length > 0 ? (
+          <ProductsInfinite categoryIds={categoryIds} />
+        ) : (
+          <p className="text-sm text-text-secondary">
+            Brak kategorii produktowych w tym dziale.
+          </p>
+        )}
       </section>
     </main>
   );

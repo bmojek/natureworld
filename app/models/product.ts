@@ -10,6 +10,8 @@ export type Product = {
 
   price: number;
 
+  taxRate?: number;
+
   stock: number;
 
   images: string[];

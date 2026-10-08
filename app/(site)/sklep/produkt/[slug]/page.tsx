@@ -1,8 +1,9 @@
 import { headers } from "next/headers";
 import ProductGallery from "@/app/components/ProductGallery";
 import AddToCartButton from "@/app/components/AddButton";
-import { Heart, Truck, ShieldCheck } from "lucide-react";
+import { Truck, ShieldCheck } from "lucide-react";
 import { Product } from "@/app/models/product";
+import sanitizeHtml from "sanitize-html";
 
 /* ================= API ================= */
 
@@ -14,7 +15,7 @@ async function fetchProduct(slug: string) {
   const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
 
   const res = await fetch(`${protocol}://${host}/api/product?slug=${slug}`, {
-    next: { revalidate: 300 },
+    next: { revalidate: 30 },
   });
 
   if (!res.ok) return null;
@@ -25,23 +26,25 @@ async function fetchProduct(slug: string) {
 /* ================= parser ================= */
 
 function parseContent(content: string) {
+  let html = content;
+
   try {
-    const json = JSON.parse(content);
+    const parsed = JSON.parse(content) as {
+      sections?: Array<{
+        items?: Array<{ type?: string; content?: string }>;
+      }>;
+    };
 
-    let html = "";
-
-    json.sections?.forEach((s: any) => {
-      s.items?.forEach((i: any) => {
-        if (i.type === "TEXT") {
-          html += i.content;
-        }
-      });
-    });
-
-    return html;
+    html = (parsed.sections ?? [])
+      .flatMap((section) => section.items ?? [])
+      .filter((item) => item.type === "TEXT")
+      .map((item) => item.content ?? "")
+      .join("");
   } catch {
-    return content;
+    html = content;
   }
+
+  return sanitizeHtml(html);
 }
 
 /* ================= PAGE ================= */
