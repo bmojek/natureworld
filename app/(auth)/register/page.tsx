@@ -4,9 +4,8 @@ import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/app/lib/firebase";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,32 +27,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="flex justify-center px-4 py-5">
-      <div className="w-full max-w-md rounded-2xl p-8">
-        <div className="relative flex items-center justify-center mb-6">
-          <ArrowLeft
-            size={24}
-            onClick={() => router.push("/")}
-            className="absolute left-0 text-text-secondary hover:text-primary cursor-pointer"
-          />
-
-          <Link href="/" className="relative w-40 h-16">
-            <Image
-              src="/api/image/logot.webp"
-              alt="Logo NatureWorld"
-              fill
-              className="object-contain"
-              priority
-            />
-          </Link>
-        </div>
-
-        <div className="flex mb-6">
+    <main className="flex min-h-[55vh] justify-center px-4 py-10 md:py-16">
+      <div className="w-full max-w-md self-start rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
+        <div className="mb-6 flex">
           <Link
             href="/login"
             className="flex-1 text-center py-3 font-medium border-b-2 border-transparent text-text-secondary hover:text-primary"
           >
-            Login
+            Logowanie
           </Link>
           <Link
             href="/register"
@@ -63,14 +44,17 @@ export default function RegisterPage() {
           </Link>
         </div>
 
+        <h1 className="mb-5 text-2xl font-semibold text-[#173d2b]">Utwórz konto</h1>
+
         <form onSubmit={handleRegister} className="space-y-5">
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p role="alert" className="text-sm font-medium text-red-800">{error}</p>}
 
           <div>
-            <label className="block text-sm mb-1">Adres e-mail</label>
+            <label htmlFor="register-email" className="mb-1 block text-sm">Adres e-mail</label>
             <input
+              id="register-email"
               type="email"
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none"
+              className="w-full rounded-xl border border-black/15 px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -78,12 +62,13 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1">Hasło</label>
+            <label htmlFor="register-password" className="mb-1 block text-sm">Hasło</label>
 
             <div className="relative">
               <input
+                id="register-password"
                 type={showPassword ? "text" : "password"}
-                className="w-full border rounded-xl px-4 py-3 pr-12 focus:ring-2 focus:ring-primary outline-none"
+                className="w-full rounded-xl border border-black/15 px-4 py-3 pr-12 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={6}
@@ -106,7 +91,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <button className="w-full bg-primary text-white py-3 rounded-full font-semibold hover:bg-green-700 transition cursor-pointer">
+          <button className="min-h-12 w-full rounded-full bg-primary py-3 font-semibold text-white transition hover:bg-[#24652a]">
             Zarejestruj się
           </button>
         </form>

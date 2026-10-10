@@ -34,13 +34,15 @@ export default function ProductGallery({
         {images.length > 1 && (
           <>
             <button
+              type="button"
               onClick={prev}
               disabled={active === 0}
+              aria-label="Poprzednie zdjęcie"
               className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 
-                bg-white/80 backdrop-blur p-2 rounded-full shadow transition
+                bg-white/95 text-[#304a37] backdrop-blur p-2 rounded-full shadow transition disabled:cursor-not-allowed disabled:text-[#77847a]
                 ${
                   active === 0
-                    ? "opacity-30 cursor-not-allowed"
+                    ? "cursor-not-allowed"
                     : "hover:bg-white"
                 }`}
             >
@@ -48,13 +50,15 @@ export default function ProductGallery({
             </button>
 
             <button
+              type="button"
               onClick={next}
               disabled={active === images.length - 1}
+              aria-label="Następne zdjęcie"
               className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 
-                bg-white/80 backdrop-blur p-2 rounded-full shadow transition
+                bg-white/95 text-[#304a37] backdrop-blur p-2 rounded-full shadow transition disabled:cursor-not-allowed disabled:text-[#77847a]
                 ${
                   active === images.length - 1
-                    ? "opacity-30 cursor-not-allowed"
+                    ? "cursor-not-allowed"
                     : "hover:bg-white"
                 }`}
             >
@@ -82,8 +86,11 @@ export default function ProductGallery({
       <div className="flex gap-3 flex-wrap">
         {images.map((img, i) => (
           <button
+            type="button"
             key={i}
             onClick={() => setActive(i)}
+            aria-label={`Pokaż zdjęcie ${i + 1} z ${images.length}`}
+            aria-pressed={i === active}
             className={`w-20 h-20 rounded-xl border overflow-hidden bg-white transition
               ${
                 i === active

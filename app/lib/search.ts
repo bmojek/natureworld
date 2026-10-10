@@ -5,7 +5,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
 
   try {
     const response = await fetch(
-      `/api/products?search=${encodeURIComponent(query)}`,
+      `/api/products?search=${encodeURIComponent(query)}&suggestions=1`,
       { cache: "no-store" },
     );
 

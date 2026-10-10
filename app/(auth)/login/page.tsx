@@ -4,8 +4,7 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/app/lib/firebase";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -27,32 +26,14 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex justify-center px-4 py-5">
-      <div className="w-full max-w-md rounded-2xl  p-8">
-        <div className="relative flex items-center justify-center mb-6">
-          <ArrowLeft
-            size={24}
-            onClick={() => router.push("/")}
-            className="absolute left-0 text-text-secondary hover:text-primary cursor-pointer"
-          />
-
-          <Link href="/" className="relative w-40 h-16">
-            <Image
-              src="/api/image/logot.webp"
-              alt="Logo NatureWorld"
-              fill
-              className="object-contain"
-              priority
-            />
-          </Link>
-        </div>
-
-        <div className="flex mb-6">
+    <main className="flex min-h-[55vh] justify-center px-4 py-10 md:py-16">
+      <div className="w-full max-w-md self-start rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
+        <div className="mb-6 flex">
           <Link
             href="/login"
             className="flex-1 text-center py-3 font-medium border-b-2 border-primary text-primary"
           >
-            Login
+            Logowanie
           </Link>
           <Link
             href="/register"
@@ -62,12 +43,15 @@ export default function LoginPage() {
           </Link>
         </div>
 
+        <h1 className="mb-5 text-2xl font-semibold text-[#173d2b]">Zaloguj się</h1>
+
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm mb-1">Adres e-mail</label>
+            <label htmlFor="login-email" className="mb-1 block text-sm">Adres e-mail</label>
             <input
+              id="login-email"
               type="email"
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none"
+              className="w-full rounded-xl border border-black/15 px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -75,12 +59,13 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1">Hasło</label>
+            <label htmlFor="login-password" className="mb-1 block text-sm">Hasło</label>
             <div className="relative">
               <input
+                id="login-password"
                 type={show ? "text" : "password"}
                 autoComplete="current-password"
-                className="w-full border rounded-xl px-4 py-3 pr-12 focus:ring-2 focus:ring-primary outline-none"
+                className="w-full rounded-xl border border-black/15 px-4 py-3 pr-12 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -88,6 +73,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShow(!show)}
+                aria-label={show ? "Ukryj hasło" : "Pokaż hasło"}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary cursor-pointer"
               >
                 {show ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -97,19 +83,11 @@ export default function LoginPage() {
               min. 6, max. 70 znaków
             </p>
           </div>
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          <button className="w-full bg-primary text-white py-3 rounded-full font-semibold hover:bg-green-700 transition cursor-pointer">
+          {error && <p role="alert" className="text-center text-sm font-medium text-red-800">{error}</p>}
+          <button className="min-h-12 w-full rounded-full bg-primary py-3 font-semibold text-white transition hover:bg-[#24652a]">
             Zaloguj się
           </button>
 
-          <div className="text-center">
-            <Link
-              href="/reset-password"
-              className="text-sm text-primary hover:underline"
-            >
-              Nie pamiętam hasła
-            </Link>
-          </div>
         </form>
       </div>
     </main>

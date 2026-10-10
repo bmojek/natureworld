@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, User, Heart, Menu, Search } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { LayoutDashboard, LogOut, Menu, Search, ShoppingCart, ShieldCheck, User, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/auth-context";
 import { useCart } from "@/app/context/cart-context";
-import { useEffect, useRef, useState } from "react";
 import Categories from "./Categories";
 import MobileCategories from "./MobileCategories";
 import { searchProducts } from "@/app/lib/search";
@@ -13,229 +14,126 @@ import { Product } from "@/app/models/product";
 import { getProductImageUrl } from "@/app/lib/product-images";
 
 export default function Header() {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const cart = useCart();
-
   const [userOpen, setUserOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const userRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
-
-  const adminAccounts =
-    process.env.NEXT_PUBLIC_ADMINACCOUNTS?.split(",").map((e) => e.trim()) ??
-    [];
-
-  const isAdmin = adminAccounts.includes(user?.email ?? "");
-
-  /* ===== CLOSE DROPDOWNS ===== */
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (userRef.current && !userRef.current.contains(e.target as Node)) {
-        setUserOpen(false);
-      }
-
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+  const desktopSearchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const userButtonRef = useRef<HTMLButtonElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+    requestAnimationFrame(() => menuButtonRef.current?.focus());
   }, []);
 
-  /* ===== SEARCH ===== */
+  const adminAccounts = process.env.NEXT_PUBLIC_ADMINACCOUNTS?.split(",").map((email) => email.trim()) ?? [];
+  const isAdmin = adminAccounts.includes(user?.email ?? "");
+
   useEffect(() => {
-    const trimmed = query.trim();
-
-    if (trimmed.length < 3) return;
-
+    if (query.trim().length < 3) { setResults([]); setSearchOpen(false); return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
-
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
-      try {
-        const res = await searchProducts(trimmed);
-        setResults(res);
-        setSearchOpen(true);
-      } finally {
-        setLoading(false);
-      }
+      try { setResults(await searchProducts(query.trim())); setSearchOpen(true); }
+      finally { setLoading(false); }
     }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query]);
-  return (
-    <>
-      <header className="shadow-md bg-background relative z-50">
-        <div className="max-w-7xl mx-auto flex items-center gap-4 px-4 py-3">
-          {/* MOBILE */}
-          <button onClick={() => setMobileMenuOpen(true)} className="md:hidden">
-            <Menu size={28} />
-          </button>
 
-          {/* LOGO */}
-          <Link href="/" className="shrink-0">
-            <Image
-              src="/api/image/logo.webp"
-              alt="NatureWorld"
-              width={180}
-              height={45}
-              priority
-            />
-          </Link>
+  useEffect(() => {
+    const close = (event: MouseEvent) => {
+      const inside = desktopSearchRef.current?.contains(event.target as Node) || mobileSearchRef.current?.contains(event.target as Node);
+      if (!inside) setSearchOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
 
-          {/* SEARCH */}
-          <div
-            ref={searchRef}
-            className="hidden md:flex flex-1 max-w-2xl mx-auto relative"
-          >
-            <div className="flex w-full border border-black/10 bg-background rounded-md overflow-hidden">
-              <input
-                value={query}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setQuery(value);
-                  if (value.trim().length < 3) {
-                    setResults([]);
-                    setSearchOpen(false);
-                  }
-                }}
-                placeholder="Szukaj produktów..."
-                className="flex-1 px-3 py-2 text-sm outline-none"
-              />
+  useEffect(() => {
+    const sync = () => setQuery(new URLSearchParams(window.location.search).get("search") ?? "");
+    sync();
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
 
-              <button className="px-3 border-l border-black/10">
-                <Search size={18} />
-              </button>
-            </div>
+  useEffect(() => {
+    if (!userOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!userMenuRef.current?.contains(event.target as Node)) setUserOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setUserOpen(false);
+        userButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [userOpen]);
 
-            {/* RESULTS */}
-            {searchOpen && (
-              <div className="absolute top-full mt-2 w-full bg-white border rounded-lg shadow-xl z-50 max-h-96 overflow-auto">
-                {loading && (
-                  <div className="p-4 text-sm text-gray-500">Szukanie...</div>
-                )}
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    const value = query.trim();
+    if (!value) return;
+    setSearchOpen(false);
+    setMobileMenuOpen(false);
+    router.push(`/sklep?search=${encodeURIComponent(value)}`);
+    requestAnimationFrame(() => window.dispatchEvent(new CustomEvent("natureworld:catalog-search", { detail: value })));
+  };
 
-                {!loading && results.length === 0 && (
-                  <div className="p-4 text-sm text-gray-500">Brak wyników</div>
-                )}
+  const searchBox = (className: string, mobile: boolean) => <div ref={mobile ? mobileSearchRef : desktopSearchRef} className={`relative ${className}`}>
+    <form onSubmit={submitSearch} role="search" className="flex w-full overflow-hidden rounded-lg border border-black/15 bg-white shadow-sm focus-within:ring-2 focus-within:ring-primary/30">
+      <input value={query} onChange={(event) => setQuery(event.target.value)} onFocus={() => { if (results.length) setSearchOpen(true); }} placeholder="Szukaj produktów…" aria-label="Szukaj produktów" className="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none" />
+      <button type="submit" aria-label="Szukaj" className="border-l border-black/10 px-3 text-primary hover:bg-[#f2f7ee] focus-visible:outline-2 focus-visible:outline-primary"><Search size={19} /></button>
+    </form>
+    {searchOpen && <div className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-96 overflow-auto rounded-lg border border-black/10 bg-white shadow-xl">
+      {loading && <p className="p-4 text-sm text-text-secondary">Wyszukiwanie…</p>}
+      {!loading && results.length === 0 && <p className="p-4 text-sm text-text-secondary">Brak podpowiedzi. Naciśnij Enter, aby zobaczyć wyniki.</p>}
+      {results.map((item) => <Link key={item.id} href={`/sklep/produkt/${item.slug}`} onClick={() => setSearchOpen(false)} className="flex items-center gap-3 p-3 hover:bg-[#f2f7ee] focus-visible:outline-2 focus-visible:outline-primary">
+        <Image src={getProductImageUrl(item.images?.[0], "thumb")} alt={item.name} width={48} height={48} unoptimized className="rounded object-contain" />
+        <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{item.name}</span><span className="text-xs text-text-secondary">{item.price} zł</span></span>
+      </Link>)}
+    </div>}
+  </div>;
 
-                {!loading &&
-                  results.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/sklep/produkt/${item.slug}`}
-                      onClick={() => setSearchOpen(false)}
-                      className="flex items-center gap-3 p-3 hover:bg-gray-50 transition"
-                    >
-                      <Image
-                        src={getProductImageUrl(item.images?.[0], "thumb")}
-                        alt={item.name}
-                        width={60}
-                        height={60}
-                        unoptimized
-                        className="object-contain rounded"
-                      />
-
-                      <div className="flex-1">
-                        <p className="text-sm font-medium line-clamp-1">
-                          {item.name}
-                        </p>
-                        <p className="text-xs text-text-secondary">
-                          {item.price} zł
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
+  return <>
+    <header className="relative z-50 border-b border-black/10 bg-background shadow-sm md:z-[90]">
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 md:gap-5">
+        <button ref={menuButtonRef} type="button" aria-label="Otwórz menu kategorii" aria-expanded={mobileMenuOpen} aria-controls="mobile-storefront-menu" onClick={() => setMobileMenuOpen(true)} className="rounded p-2 text-primary hover:bg-[#edf3e9] focus-visible:outline-2 focus-visible:outline-primary md:hidden"><Menu /></button>
+        <Link href="/" aria-label="Nature-World — strona główna" className="shrink-0"><Image src="/api/image/logo.webp" alt="Nature-World" width={170} height={43} priority className="h-auto w-[128px] sm:w-[160px]" /></Link>
+        {searchBox("hidden min-w-0 flex-1 md:block", false)}
+        <nav aria-label="Konto i koszyk" className="ml-auto flex shrink-0 items-center gap-3 sm:gap-4">
+          {user ? <div ref={userMenuRef} className="relative">
+            <button ref={userButtonRef} type="button" aria-label="Menu konta" aria-haspopup="menu" aria-expanded={userOpen} onClick={() => setUserOpen((open) => !open)} className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${userOpen ? "border-primary/20 bg-[#edf3e9] text-primary" : "border-transparent text-primary hover:bg-[#edf3e9]"}`}><User aria-hidden="true" size={20} /></button>
+            {userOpen && <div role="menu" aria-label="Menu konta" className="absolute right-0 top-full z-[100] mt-3 w-[min(19rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-[#dfe7d8] bg-white shadow-[0_20px_50px_-20px_rgba(23,61,43,.35)] ring-1 ring-black/5">
+              <div className="bg-gradient-to-br from-[#f3f7ef] to-white p-4">
+                <div className="flex min-w-0 items-center gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#173d2b] text-white"><UserRound size={20} /></span><div className="min-w-0"><p className="text-[11px] font-bold uppercase tracking-[.14em] text-primary">Twoje konto</p><p className="mt-0.5 truncate text-sm font-semibold text-[#173d2b]" title={user.email ?? undefined}>{user.email}</p></div></div>
               </div>
-            )}
-          </div>
-
-          {/* ICONS */}
-          <nav className="flex items-center gap-4 ml-auto relative">
-            {user ? (
-              <div className="relative" ref={userRef}>
-                <button onClick={() => setUserOpen(!userOpen)}>
-                  <User size={24} />
-                </button>
-
-                {userOpen && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-lg border shadow-xl">
-                    <div className="px-4 py-3 border-b">
-                      <p className="text-sm font-medium">Moje konto</p>
-                      <p className="text-xs truncate">{user.email}</p>
-                    </div>
-
-                    <Link
-                      href="/sklep/profil"
-                      onClick={() => setUserOpen(false)}
-                      className="block px-4 py-2 hover:bg-gray-50"
-                    >
-                      Profil
-                    </Link>
-
-                    <Link
-                      href="/sklep/zamowienia"
-                      onClick={() => setUserOpen(false)}
-                      className="block px-4 py-2 hover:bg-gray-50"
-                    >
-                      Zamówienia
-                    </Link>
-
-                    {isAdmin && (
-                      <Link
-                        href="/adminpanel"
-                        onClick={() => setUserOpen(false)}
-                        className="block px-4 py-2 hover:bg-gray-50"
-                      >
-                        Panel admina
-                      </Link>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        logout();
-                        setUserOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"
-                    >
-                      Wyloguj
-                    </button>
-                  </div>
-                )}
+              <div className="space-y-1 p-2">
+                <Link role="menuitem" href="/sklep/profil" onClick={() => setUserOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-[#304a37] transition-colors hover:bg-[#f3f6ef] focus-visible:outline-2 focus-visible:outline-primary"><UserRound size={17} className="text-primary" />Profil</Link>
+                {isAdmin && <Link role="menuitem" href="/adminpanel" onClick={() => setUserOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-[#304a37] transition-colors hover:bg-[#f3f6ef] focus-visible:outline-2 focus-visible:outline-primary"><LayoutDashboard size={17} className="text-primary" />Panel administratora<ShieldCheck size={15} className="ml-auto text-primary/70" /></Link>}
               </div>
-            ) : (
-              <Link href="/login">
-                <User size={24} />
-              </Link>
-            )}
-
-            <Link href="/ulubione">
-              <Heart size={24} />
-            </Link>
-
-            <Link href="/sklep/koszyk" className="relative">
-              {cart.items.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {cart.items.length}
-                </span>
-              )}
-              <ShoppingCart size={24} />
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <Categories />
-
-      {mobileMenuOpen && (
-        <MobileCategories onClose={() => setMobileMenuOpen(false)} />
-      )}
-    </>
-  );
+              <div className="border-t border-black/5 p-2"><button role="menuitem" onClick={() => { logout(); setUserOpen(false); }} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-red-700 transition-colors hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-red-600"><LogOut size={17} />Wyloguj</button></div>
+            </div>}
+          </div> : <Link href="/login" aria-label="Zaloguj się" className="rounded p-2 hover:bg-[#edf3e9] focus-visible:outline-2 focus-visible:outline-primary"><User /></Link>}
+          <Link href="/sklep/koszyk" aria-label={`Koszyk${cart.items.length ? `, ${cart.items.length} produktów` : ""}`} className="relative rounded p-2 text-primary hover:bg-[#edf3e9] focus-visible:outline-2 focus-visible:outline-primary"><ShoppingCart />{cart.items.length > 0 && <span className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs text-white">{cart.items.length}</span>}</Link>
+        </nav>
+      </div>
+      {searchBox("mx-auto max-w-7xl px-4 pb-3 md:hidden", true)}
+    </header>
+    <Categories />
+    {mobileMenuOpen && <MobileCategories onClose={closeMobileMenu} />}
+  </>;
 }

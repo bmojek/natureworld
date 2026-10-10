@@ -148,13 +148,13 @@ export default function CheckoutPage() {
   }
 
   if (!ready) {
-    return <main className="mx-auto min-h-screen max-w-4xl px-6 py-16">Ładowanie koszyka…</main>;
+    return <main className="mx-auto min-h-[55vh] max-w-4xl px-5 py-16"><div className="h-48 animate-pulse rounded-3xl bg-[#edf1e9]" aria-label="Ładowanie koszyka" /></main>;
   }
 
   if (order) {
     return (
-      <main className="mx-auto min-h-[60vh] max-w-3xl px-6 py-16">
-        <div className="border-t-4 border-primary py-8">
+      <main className="mx-auto min-h-[55vh] max-w-3xl px-5 py-12 md:py-16">
+        <div className="rounded-3xl bg-white p-7 shadow-sm ring-1 ring-black/5 md:p-10">
           <CheckCircle2 className="mb-5 text-primary" size={36} />
           <p className="text-sm font-semibold uppercase text-primary">Zamówienie przyjęte</p>
           <h1 className="mt-2 text-3xl font-semibold">Dziękujemy za zakupy</h1>
@@ -164,7 +164,7 @@ export default function CheckoutPage() {
           <p className="mt-2 text-text-secondary">
             Do zapłaty przy odbiorze: <strong>{order.total.toFixed(2)} zł</strong>
           </p>
-          <Link href="/sklep" className="mt-8 inline-flex items-center gap-2 font-semibold text-primary">
+          <Link href="/sklep" className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-white hover:bg-[#24652a]">
             <ShoppingBag size={18} /> Wróć do sklepu
           </Link>
         </div>
@@ -174,9 +174,9 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <main className="mx-auto min-h-[60vh] max-w-4xl px-6 py-16 text-center">
+      <main className="mx-auto flex min-h-[55vh] max-w-4xl flex-col items-center justify-center px-5 py-16 text-center">
         <h1 className="text-2xl font-semibold">Koszyk jest pusty</h1>
-        <Link href="/sklep" className="mt-5 inline-flex items-center gap-2 text-primary">
+        <Link href="/sklep" className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-white">
           <ArrowLeft size={17} /> Wróć do sklepu
         </Link>
       </main>
@@ -184,42 +184,42 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="mx-auto grid min-h-screen max-w-7xl gap-10 px-6 py-10 lg:grid-cols-[1fr_360px]">
+    <main className="mx-auto grid min-h-[55vh] max-w-7xl gap-6 px-4 py-8 md:px-8 md:py-12 lg:grid-cols-[1fr_360px]">
       <section>
         <Link href="/sklep/koszyk" className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-primary">
           <ArrowLeft size={16} /> Wróć do koszyka
         </Link>
         <p className="mt-8 text-sm font-semibold uppercase text-primary">Finalizacja</p>
-        <h1 className="mt-1 text-3xl font-semibold">Dane do dostawy</h1>
-        <p className="mt-3 max-w-2xl text-sm text-text-secondary">
+        <h1 className="mt-1 text-3xl font-semibold text-[#173d2b]">Dane do dostawy</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary">
           Dostępna płatność: za pobraniem. Ceny i dostępność potwierdzimy ponownie w magazynie Base przy składaniu zamówienia.
         </p>
 
-        <form onSubmit={submitOrder} className="mt-8 space-y-7">
+        <form onSubmit={submitOrder} className="mt-8 space-y-7 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5 md:p-8">
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="space-y-2 sm:col-span-2">
               <span className="text-sm font-medium">Imię i nazwisko</span>
-              <input name="fullName" autoComplete="name" required maxLength={120} className="w-full border border-black/20 bg-white px-3 py-3 outline-none focus:border-primary" />
+              <input name="fullName" autoComplete="name" required maxLength={120} className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
             </label>
             <label className="space-y-2">
               <span className="text-sm font-medium">E-mail</span>
-              <input name="email" type="email" autoComplete="email" required maxLength={150} className="w-full border border-black/20 bg-white px-3 py-3 outline-none focus:border-primary" />
+              <input name="email" type="email" autoComplete="email" required maxLength={150} className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
             </label>
             <label className="space-y-2">
               <span className="text-sm font-medium">Telefon</span>
-              <input name="phone" type="tel" autoComplete="tel" required maxLength={40} className="w-full border border-black/20 bg-white px-3 py-3 outline-none focus:border-primary" />
+              <input name="phone" type="tel" autoComplete="tel" required maxLength={40} className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
             </label>
             <label className="space-y-2 sm:col-span-2">
               <span className="text-sm font-medium">Ulica i numer</span>
-              <input name="street" autoComplete="street-address" required maxLength={150} className="w-full border border-black/20 bg-white px-3 py-3 outline-none focus:border-primary" />
+              <input name="street" autoComplete="street-address" required maxLength={150} className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
             </label>
             <label className="space-y-2">
               <span className="text-sm font-medium">Kod pocztowy</span>
-              <input name="postalCode" autoComplete="postal-code" required maxLength={20} className="w-full border border-black/20 bg-white px-3 py-3 outline-none focus:border-primary" />
+              <input name="postalCode" autoComplete="postal-code" required maxLength={20} className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
             </label>
             <label className="space-y-2">
               <span className="text-sm font-medium">Miejscowość</span>
-              <input name="city" autoComplete="address-level2" required maxLength={100} className="w-full border border-black/20 bg-white px-3 py-3 outline-none focus:border-primary" />
+              <input name="city" autoComplete="address-level2" required maxLength={100} className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
             </label>
           </div>
 
@@ -231,13 +231,13 @@ export default function CheckoutPage() {
           {wantInvoice && (
             <label className="block max-w-sm space-y-2">
               <span className="text-sm font-medium">NIP</span>
-              <input name="nip" inputMode="numeric" pattern="[0-9\s-]{10,20}" required maxLength={20} className="w-full border border-black/20 bg-white px-3 py-3 outline-none focus:border-primary" />
+            <input name="nip" inputMode="numeric" pattern="[0-9\s-]{10,20}" required maxLength={20} className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
             </label>
           )}
 
           <label className="block space-y-2">
             <span className="text-sm font-medium">Uwagi do zamówienia (opcjonalnie)</span>
-            <textarea name="note" rows={3} maxLength={500} className="w-full resize-y border border-black/20 bg-white px-3 py-3 outline-none focus:border-primary" />
+            <textarea name="note" rows={3} maxLength={500} className="w-full resize-y rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
           </label>
 
           <label className="hidden" aria-hidden="true">
@@ -255,14 +255,14 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          <button type={pending ? "button" : "submit"} onClick={pending ? checkOrderStatus : undefined} disabled={submitting} className="inline-flex min-h-12 items-center justify-center gap-2 bg-primary px-7 py-3 font-semibold text-white transition hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60">
+          <button type={pending ? "button" : "submit"} onClick={pending ? checkOrderStatus : undefined} disabled={submitting} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 font-semibold text-white transition hover:bg-[#24652a] disabled:cursor-wait disabled:bg-[#e7ebe6] disabled:text-[#56635a] disabled:opacity-100">
             {submitting && <LoaderCircle className="animate-spin" size={18} />}
             {pending ? "Sprawdź status zamówienia" : submitting ? "Wysyłanie…" : "Złóż zamówienie za pobraniem"}
           </button>
         </form>
       </section>
 
-      <aside className="h-fit border-t-4 border-primary bg-bg-muted p-6 lg:sticky lg:top-8">
+      <aside className="h-fit rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5 lg:sticky lg:top-28 md:p-6">
         <h2 className="text-lg font-semibold">Podsumowanie</h2>
         <ul className="mt-5 divide-y divide-black/10">
           {items.map((item) => (

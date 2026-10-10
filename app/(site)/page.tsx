@@ -1,1002 +1,110 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import type { LucideIcon } from "lucide-react";
-import {
-  ArrowRight,
-  CalendarDays,
-  CheckCircle2,
-  Clock,
-  Dog,
-  Facebook,
-  Fish,
-  Flower2,
-  Instagram,
-  Leaf,
-  Mail,
-  MapPin,
-  Newspaper,
-  PawPrint,
-  Phone,
-  Search,
-  ShieldCheck,
-  ShoppingBag,
-  Sparkles,
-  Sprout,
-  Store,
-  Truck,
-  Waves,
-} from "lucide-react";
+import { ArrowRight, House, Leaf, Mail, MapPin, PawPrint, Phone, Search, SlidersHorizontal, Store } from "lucide-react";
+import HomeContent from "@/app/components/HomeContent";
+import { storeContact } from "@/app/lib/store-contact";
 
-type NewsPost = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt?: string;
-  content?: string;
-  images?: string[];
-  publishedAt?: Date | string | number | {
-    seconds?: number;
-    _seconds?: number;
-  };
-};
-
-const facebookUrl = "https://www.facebook.com/p/Nature-World-61573608614787/";
-const allegroUrl = "https://allegro.pl/uzytkownik/nature-world";
-const phoneNumber = "14 650 15 01";
-const emailAddress = "biuro@nature-world.pl";
-const storeAddress = "Oświatowa 2, 33-111 Koszyce Małe";
-const openingHours = "Pn-Pt 9:00-18:00, Sob 9:00-15:00";
-const mapsUrl =
-  "https://www.google.com/maps/place/O%C5%9Bwiatowa+2,+33-111+Koszyce+Ma%C5%82e";
-const fallbackImage = "banerwide2.webp";
-
-const fallbackPosts: NewsPost[] = [
-  {
-    id: "start",
-    title: "Nowości w Nature World",
-    slug: "startujemy-z-firmowa-strona",
-    excerpt:
-      "Sprawdzaj aktualne informacje o produktach do ogrodu, domu i dla zwierząt.",
-    images: ["banerwide2.webp"],
-    publishedAt: Date.now(),
-  },
-  {
-    id: "sezon",
-    title: "Produkty sezonowe dla domu i ogrodu",
-    slug: "produkty-sezonowe",
-    excerpt:
-      "Praktyczne propozycje na balkon, ogród, dom i najważniejsze prace sezonowe.",
-    images: ["bilbordsharp.webp"],
-    publishedAt: Date.now(),
-  },
-  {
-    id: "allegro",
-    title: "Oferta w sklepie Nature World",
-    slug: "oferta-na-allegro",
-    excerpt:
-      "Zobacz dostępne produkty i wybierz artykuły dopasowane do swoich potrzeb.",
-    images: ["main_onas2.webp"],
-    publishedAt: Date.now(),
-  },
+const departments = [
+  { title: "ZWIERZĘTA", description: "Akcesoria i produkty dla zwierząt oraz akwarystyka.", href: "/sklep/dzial/zwierzeta", icon: PawPrint, theme: "bg-[#eff4e9]", iconTheme: "bg-[#dfead6] text-[#315d37]" },
+  { title: "OGRÓD", description: "Artykuły ogrodowe, pielęgnacja roślin i wyposażenie.", href: "/sklep/dzial/ogrod", icon: Leaf, theme: "bg-[#eaf2e6]", iconTheme: "bg-[#d9e9d3] text-[#315d37]" },
+  { title: "DOM", description: "Wyposażenie, dekoracje i praktyczne dodatki do domu.", href: "/sklep/dzial/dom", icon: House, theme: "bg-[#f4f0e7]", iconTheme: "bg-[#e9e0cf] text-[#68573a]" },
 ];
 
-const categories = [
-  {
-    icon: Leaf,
-    title: "Ogród",
-    text: "Nasiona, nawozy, podłoża, doniczki, osłonki i akcesoria sezonowe.",
-  },
-  {
-    icon: PawPrint,
-    title: "Zwierzęta",
-    text: "Produkty dla psów, kotów oraz dział akwarystyczny.",
-  },
-  {
-    icon: Sprout,
-    title: "Rośliny i florystyka",
-    text: "Artykuły dla roślin, dekoracje, ozdoby i dodatki florystyczne.",
-  },
-  {
-    icon: Sparkles,
-    title: "Sezonowe",
-    text: "Nowości, promocje i produkty dopasowane do aktualnego sezonu.",
-  },
+const catalogSteps = [
+  { number: "01", title: "Wybierz dział", description: "Zacznij od produktów dla zwierząt, ogrodu albo domu.", icon: Store },
+  { number: "02", title: "Otwórz kategorię", description: "Przejdź do właściwej grupy produktów i jej podkategorii.", icon: SlidersHorizontal },
+  { number: "03", title: "Szukaj po nazwie", description: "Użyj wyszukiwarki, jeśli wiesz, czego potrzebujesz.", icon: Search },
 ];
 
-const offerGroups = [
-  {
-    title: "Ogród i rośliny",
-    image: "main_ogrod.webp",
-    items: [
-      "nasiona warzyw, ziół i roślin ozdobnych",
-      "nawozy i preparaty",
-      "podłoża oraz ziemie",
-      "doniczki, osłonki i pojemniki",
-    ],
-  },
-  {
-    title: "Zwierzęta",
-    image: "main_zwierzeta.webp",
-    items: [
-      "produkty dla psów",
-      "produkty dla kotów",
-      "akwarystyka",
-      "praktyczne akcesoria dla pupili",
-    ],
-  },
-  {
-    title: "Dom i sezon",
-    image: "main_dom.webp",
-    items: [
-      "dekoracje i ozdoby",
-      "florystyka",
-      "produkty okazjonalne",
-      "nowości dostępne w sklepie",
-    ],
-  },
-];
-
-const storeFacts = [
-  {
-    icon: Store,
-    title: "Szeroki wybór produktów",
-    text: "W jednym miejscu znajdziesz artykuły ogrodnicze, dekoracyjne, sezonowe i zoologiczne.",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Wygodne zakupy online",
-    text: "Aktualną ofertę Nature World możesz sprawdzić i zamówić bezpośrednio przez Allegro.",
-  },
-  {
-    icon: Newspaper,
-    title: "Nowości i inspiracje",
-    text: "Regularnie pokazujemy produkty sezonowe, praktyczne wskazówki i propozycje warte uwagi.",
-  },
-];
-
-const servicePoints = [
-  "produkty ogrodnicze i akcesoria do roślin",
-  "dekoracje domowe, ozdoby i dodatki sezonowe",
-  "asortyment zoologiczny dla zwierząt",
-  "zakupy stacjonarne, Allegro i dostawy",
-];
-
-const gardenSeason = [
-  {
-    title: "Wysiew i rozsady",
-    text: "Nasiona warzyw, ziół i roślin ozdobnych, które dobrze pasują do wiosennego startu sezonu.",
-  },
-  {
-    title: "Pielęgnacja roślin",
-    text: "Nawozy, preparaty, podłoża i ziemie do codziennej opieki nad roślinami domowymi i ogrodowymi.",
-  },
-  {
-    title: "Doniczki i dekoracje",
-    text: "Doniczki, osłonki, pojemniki, ozdoby oraz dodatki florystyczne do domu, balkonu i ogrodu.",
-  },
-  {
-    title: "Produkty sezonowe",
-    text: "Artykuły okazjonalne, dekoracje i nowości dopasowane do aktualnej pory roku.",
-  },
-];
-
-const petZones = [
-  {
-    icon: Dog,
-    title: "Dla psów",
-    text: "Karmy, przysmaki, zabawki i praktyczne akcesoria dla codziennej opieki nad psem.",
-  },
-  {
-    icon: PawPrint,
-    title: "Dla kotów",
-    text: "Produkty dla kotów: od podstawowej opieki po dodatki poprawiające komfort pupila.",
-  },
-  {
-    icon: Fish,
-    title: "Akwarystyka",
-    text: "Asortyment akwarystyczny i drobne akcesoria dla osób rozwijających domowe akwarium.",
-  },
-];
-
-const newsTopics = [
-  "nowe dostawy i produkty w ofercie",
-  "sezonowe porady ogrodnicze",
-  "propozycje dla psów, kotów i akwarystyki",
-  "informacje o promocjach i sprzedaży online",
-  "krótkie inspiracje dla domu, balkonu i ogrodu",
-  "komunikaty organizacyjne Nature World",
-];
-
-function formatDate(value: NewsPost["publishedAt"]) {
-  if (!value) return "";
-
-  if (value instanceof Date) {
-    return value.toLocaleDateString("pl-PL");
-  }
-
-  if (typeof value === "object" && "seconds" in value && value.seconds) {
-    return new Date(value.seconds * 1000).toLocaleDateString("pl-PL");
-  }
-
-  if (typeof value === "object" && "_seconds" in value && value._seconds) {
-    return new Date(value._seconds * 1000).toLocaleDateString("pl-PL");
-  }
-
-  if (typeof value === "object") return "";
-
-  return new Date(value).toLocaleDateString("pl-PL");
-}
-
-export default function Main() {
-  const [posts, setPosts] = useState<NewsPost[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-
-    fetch("/api/posts?type=news")
-      .then((response) => response.json())
-      .then((data) => {
-        if (active) setPosts(Array.isArray(data) ? data : []);
-      })
-      .catch(() => {
-        if (active) setPosts([]);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const visiblePosts = useMemo(
-    () => (posts.length ? posts : fallbackPosts),
-    [posts],
-  );
-
-  const homepagePosts = useMemo(() => visiblePosts.slice(0, 6), [visiblePosts]);
-
-  const featured = visiblePosts[0];
-  const secondaryPosts = visiblePosts.slice(1, 4);
-
-  return (
-    <main className="min-h-screen bg-background">
-      <CompanyHeader />
-
-      <section className="max-w-7xl mx-auto px-4 py-10">
-        <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-          <FeaturedNews post={featured} loading={loading} />
-
-          <aside className="grid gap-4">
-            <div className="animate-fade-up rounded-3xl bg-primary p-7 text-white shadow-sm [animation-delay:120ms]">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">
-                Nature World
-              </p>
-              <h1 className="mt-4 text-3xl font-semibold leading-tight !text-white">
-                Aktualności, nowości i ważne informacje
-              </h1>
-              <p className="mt-5 leading-7 text-white/80">
-                Sprawdzaj nowe produkty, sezonowe inspiracje, porady ogrodnicze
-                oraz informacje o ofercie dla domu i zwierząt.
-              </p>
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link
-                  href="/sklep"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-primary transition hover:bg-white/90"
-                >
-                  <Store size={17} />
-                  Przejdź do sklepu
-                </Link>
-                <Link
-                  href={allegroUrl}
-                  target="_blank"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/40 px-6 text-sm font-semibold text-white transition hover:bg-white/10"
-                >
-                  <ShoppingBag size={17} />
-                  Oferta na Allegro
-                </Link>
-              </div>
-            </div>
-
-            <div className="animate-fade-up rounded-3xl bg-white/80 p-6 shadow-sm [animation-delay:220ms]">
-              <h2 className="flex items-center gap-2 text-lg font-semibold">
-                <Newspaper className="text-primary" size={20} />
-                Najnowsze wpisy
-              </h2>
-              <div className="mt-5 grid gap-4">
-                {secondaryPosts.map((post) => (
-                  <SmallNewsItem key={post.id} post={post} />
-                ))}
-              </div>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <section id="aktualnosci" className="animate-fade-up max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <SectionHeader
-            eyebrow="Aktualności"
-            title="Wszystko, co nowe w Nature World"
-            description="Nowości produktowe, sezonowe inspiracje i praktyczne informacje dla osób, które dbają o ogród, dom oraz swoich pupili."
-          />
-          <Link
-            href="/aktualnosci"
-            className="inline-flex h-12 w-fit items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white transition hover:bg-primary/90"
-          >
-            Wszystkie aktualności
-            <ArrowRight size={17} />
-          </Link>
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {homepagePosts.map((post) => (
-            <NewsCard key={post.id} post={post} />
-          ))}
-        </div>
-      </section>
-
-      <section id="oferta" className="max-w-7xl mx-auto px-4 py-12">
-        <SectionHeader
-          eyebrow="Oferta"
-          title="Krótko o tym, czym się zajmujemy"
-          description="Nature World łączy artykuły ogrodnicze, dekoracje domowe, produkty sezonowe oraz asortyment zoologiczny."
-        />
-
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {categories.map((item) => (
-            <CategoryCard key={item.title} {...item} />
-          ))}
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid gap-6 lg:grid-cols-3">
-          {offerGroups.map((group, index) => (
-            <article
-              key={group.title}
-              className="animate-fade-up group overflow-hidden rounded-3xl bg-white/80 shadow-sm ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-primary/20"
-              style={{ animationDelay: `${index * 90}ms` }}
-            >
-              <div className="relative aspect-[3/2] bg-white">
-                <Image
-                  src={`/api/image/${group.image}`}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1024px) 33vw, 100vw"
-                  className="object-contain transition duration-300 group-hover:scale-105"
-                />
-              </div>
-
-              <div className="p-6">
-                <h3 className="text-2xl font-semibold group-hover:text-primary">
-                  {group.title}
-                </h3>
-                <ul className="mt-5 grid gap-3">
-                  {group.items.map((item) => (
-                    <li
-                      key={item}
-                      className="flex gap-3 text-sm leading-6 text-text-secondary"
-                    >
-                      <CheckCircle2
-                        className="mt-0.5 shrink-0 text-primary"
-                        size={17}
-                      />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <SectionHeader
-              eyebrow="Sezon w ogrodzie"
-              title="Od nasion po dekoracje"
-              description="Wybierz produkty do wysiewu, pielęgnacji roślin, przesadzania, dekorowania domu oraz przygotowania ogrodu na kolejne etapy sezonu."
-            />
-            <Link
-              href="/aktualnosci"
-              className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white transition hover:bg-primary/90"
-            >
-              Zobacz sezonowe wpisy
-              <ArrowRight size={17} />
-            </Link>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {gardenSeason.map((item, index) => (
-              <article
-                key={item.title}
-                className="animate-fade-up rounded-3xl bg-white/80 p-6 shadow-sm ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-primary/20"
-                style={{ animationDelay: `${index * 80}ms` }}
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  {index === 0 && <Sprout size={22} />}
-                  {index === 1 && <Waves size={22} />}
-                  {index === 2 && <Flower2 size={22} />}
-                  {index === 3 && <Sparkles size={22} />}
-                </div>
-                <h3 className="mt-5 text-xl font-semibold">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-text-secondary">
-                  {item.text}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 py-12">
-        <div className="rounded-3xl bg-white/80 p-5 shadow-sm md:p-8">
-          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-background">
-              <Image
-                src="/api/image/strefa_zwierzak.webp"
-                alt="Produkty zoologiczne Nature World"
-                fill
-                sizes="(min-width: 1024px) 45vw, 100vw"
-                className="object-cover transition duration-300 hover:scale-105"
-              />
-            </div>
-
-            <div>
-              <SectionHeader
-                eyebrow="Strefa zwierząt"
-                title="Produkty dla pupili i akwarystyki"
-                description="W ofercie znajdziesz produkty dla psów i kotów, praktyczne akcesoria dla pupili oraz artykuły akwarystyczne."
-              />
-
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                {petZones.map(({ icon: Icon, title, text }) => (
-                  <article
-                    key={title}
-                    className="rounded-2xl bg-background p-5 transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-sm"
-                  >
-                    <Icon className="text-primary" size={28} />
-                    <h3 className="mt-4 font-semibold">{title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-text-secondary">
-                      {text}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="onas" className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid gap-8 rounded-3xl bg-white/80 p-5 shadow-sm md:p-8 lg:grid-cols-2 lg:items-center">
-          <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-background">
-            <Image
-              src="/api/image/main_onas3.webp"
-              alt="Nature World"
-              fill
-              sizes="(min-width: 1024px) 33vw, 100vw"
-              className="object-cover transition duration-300 hover:scale-105"
-            />
-          </div>
-
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
-              O nas
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-4xl">
-              Różnorodny asortyment dla domu, ogrodu i zwierząt
-            </h2>
-            <p className="mt-5 leading-8 text-text-secondary">
-              Nature World to sklep z szerokim, praktycznym asortymentem: od
-              produktów ogrodniczych i akcesoriów do roślin, przez dekoracje
-              domowe i sezonowe, aż po artykuły zoologiczne dla zwierząt. Na
-              stronie pokazujemy przede wszystkim aktualności, nowości i
-              kategorie, które najlepiej oddają charakter sklepu.
-            </p>
-
-            <div className="mt-7 grid gap-3 sm:grid-cols-2">
-              {servicePoints.map((point) => (
-                <div
-                  key={point}
-                  className="flex items-center gap-3 rounded-2xl bg-background p-4 text-sm font-medium"
-                >
-                  <CheckCircle2 className="shrink-0 text-primary" size={18} />
-                  {point}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 py-12">
-        <SectionHeader
-          eyebrow="Dlaczego Nature World?"
-          title="Praktyczna oferta do codziennych potrzeb"
-          description="Łączymy produkty do ogrodu, domu i opieki nad zwierzętami, żeby łatwiej znaleźć potrzebne artykuły w jednym miejscu."
-        />
-
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {storeFacts.map(({ icon: Icon, title, text }) => (
-            <article
-              key={title}
-              className="animate-fade-up rounded-3xl bg-white/80 p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-            >
-              <Icon className="text-primary" size={32} />
-              <h3 className="mt-5 text-xl font-semibold">{title}</h3>
-              <p className="mt-3 leading-7 text-text-secondary">{text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid gap-8 rounded-3xl bg-white/80 p-6 shadow-sm md:p-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div>
-            <SectionHeader
-              eyebrow="Porady i inspiracje"
-              title="Pomysły na ogród, dom i opiekę nad zwierzętami"
-              description="Aktualności pomagają szybko znaleźć nowości, sezonowe propozycje oraz praktyczne wskazówki przy wyborze produktów."
-            />
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {newsTopics.map((topic) => (
-              <div
-                key={topic}
-                className="flex gap-3 rounded-2xl bg-background p-4 text-sm font-medium leading-6"
-              >
-                <Newspaper className="mt-0.5 shrink-0 text-primary" size={18} />
-                {topic}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="kontakt" className="max-w-7xl mx-auto px-4 py-12">
-        <div className="animate-fade-up overflow-hidden rounded-3xl bg-primary text-white shadow-xl">
-          <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[0.95fr_1.05fr] lg:p-10">
-            <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">
-              Kontakt
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold !text-white md:text-4xl">
-              Chcesz zapytać o ofertę?
-            </h2>
-            <p className="mt-5 max-w-2xl leading-8 text-white/80">
-              Odwiedź nas w Koszycach Małych, zadzwoń albo sprawdź aktualną
-              ofertę online. Chętnie pomożemy w wyborze produktów do ogrodu,
-              domu i dla zwierząt.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href={`tel:${phoneNumber.replaceAll(" ", "")}`}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-primary transition hover:bg-white/90"
-              >
-                <Phone size={17} />
-                Zadzwoń
-              </Link>
-              <Link
-                href={mapsUrl}
-                target="_blank"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/45 px-6 text-sm font-semibold text-white transition hover:bg-white hover:text-primary"
-              >
-                <MapPin size={17} />
-                Pokaż na mapie
-              </Link>
-            </div>
-          </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <ContactRow
-                icon={Phone}
-                label={phoneNumber}
-                href={`tel:${phoneNumber.replaceAll(" ", "")}`}
-              />
-              <ContactRow
-                icon={Mail}
-                label={emailAddress}
-                href={`mailto:${emailAddress}`}
-              />
-              <ContactRow icon={MapPin} label={storeAddress} href={mapsUrl} />
-              <ContactRow icon={Clock} label={openingHours} />
-            </div>
-          </div>
-
-          <div className="border-t border-white/15 bg-black/10 px-6 py-4 text-sm text-white/75 md:px-8 lg:px-10">
-            Sklep stacjonarny, sprzedaż przez Allegro i wygodne formy dostawy.
-          </div>
-        </div>
-      </section>
-
-      <CompanyFooter />
-    </main>
-  );
-}
-
-function CompanyHeader() {
-  return (
-    <header className="relative z-50 bg-background shadow-md">
-      <div className="max-w-7xl mx-auto flex items-center gap-4 px-4 py-3">
-        <Link href="/" className="shrink-0">
-          <Image
-            src="/api/image/logo.webp"
-            alt="Nature World"
-            width={180}
-            height={45}
-            priority
-          />
-        </Link>
-
-        <nav className="hidden flex-1 items-center justify-center gap-6 md:flex">
-          <Link
-            className="text-sm font-semibold text-primary"
-            href="/aktualnosci"
-          >
-            Aktualności
-          </Link>
-          <a
-            className="text-sm font-semibold text-text-secondary transition hover:text-primary"
-            href="#oferta"
-          >
-            Oferta
-          </a>
-          <a
-            className="text-sm font-semibold text-text-secondary transition hover:text-primary"
-            href="#onas"
-          >
-            O nas
-          </a>
-          <a
-            className="text-sm font-semibold text-text-secondary transition hover:text-primary"
-            href="#kontakt"
-          >
-            Kontakt
-          </a>
-        </nav>
-
-        <div className="ml-auto flex items-center gap-3">
-          <Link
-            href={facebookUrl}
-            target="_blank"
-            aria-label="Facebook"
-            className="hidden rounded-full bg-white p-3 text-primary shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:inline-flex"
-          >
-            <Facebook size={18} />
-          </Link>
-          <Link
-            href={facebookUrl}
-            target="_blank"
-            aria-label="Instagram"
-            className="hidden rounded-full bg-white p-3 text-primary shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:inline-flex"
-          >
-            <Instagram size={18} />
-          </Link>
-          <Link
-            href={allegroUrl}
-            target="_blank"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
-          >
-            <Search size={16} />
-            Oferta
-          </Link>
-        </div>
-      </div>
-
-      <div className="bg-primary">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-white">
-          <Newspaper size={17} />
-          <span>Aktualności Nature World</span>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function FeaturedNews({ post, loading }: { post: NewsPost; loading: boolean }) {
-  const image = post.images?.[0] ?? fallbackImage;
-
-  return (
-    <article className="animate-fade-up group overflow-hidden rounded-3xl bg-white/80 shadow-sm transition hover:shadow-xl">
-      <Link href={`/aktualnosci#${post.slug}`} className="block">
-        <div className="relative aspect-[16/9] bg-white">
-          <Image
-            src={`/api/image/${image}`}
-            alt=""
-            fill
-            priority
-            sizes="(min-width: 1024px) 65vw, 100vw"
-            className="object-cover transition duration-500 group-hover:scale-105"
-          />
-          <div className="absolute left-5 top-5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white">
-            {loading ? "Ładowanie..." : "Najnowsze"}
-          </div>
-        </div>
-
-        <div className="p-6 md:p-8">
-          <div className="flex items-center gap-2 text-sm text-text-secondary">
-            <CalendarDays size={16} className="text-primary" />
-            {formatDate(post.publishedAt)}
-          </div>
-          <h1 className="mt-4 text-3xl font-semibold leading-tight transition group-hover:text-primary md:text-5xl">
-            {post.title}
-          </h1>
-          {post.excerpt && (
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-text-secondary">
-              {post.excerpt}
-            </p>
-          )}
-          <span className="mt-7 inline-flex items-center gap-2 font-semibold text-primary">
-            Czytaj aktualność
-            <ArrowRight size={18} />
-          </span>
-        </div>
-      </Link>
-    </article>
-  );
-}
-
-function SmallNewsItem({ post }: { post: NewsPost }) {
-  return (
-    <Link href={`/aktualnosci#${post.slug}`} className="group flex gap-4">
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-background">
-        <Image
-          src={`/api/image/${post.images?.[0] ?? fallbackImage}`}
-          alt=""
-          fill
-          sizes="80px"
-          className="object-cover transition group-hover:scale-105"
-        />
-      </div>
-      <div>
-        <p className="line-clamp-2 font-semibold leading-snug group-hover:text-primary">
-          {post.title}
-        </p>
-        <p className="mt-1 text-sm text-text-secondary">
-          {formatDate(post.publishedAt)}
-        </p>
-      </div>
-    </Link>
-  );
-}
-
-function CompanyFooter() {
-  return (
-    <footer className="mt-12 bg-white/80 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
-      <div className="max-w-7xl mx-auto grid gap-10 px-4 py-12 md:grid-cols-[1.15fr_0.8fr_1fr_1fr]">
+export default function HomePage() {
+  return <main>
+    <section className="relative isolate overflow-hidden bg-[#173d2b] text-white">
+      <Image src="/api/image/main_ogrod.webp" alt="Asortyment Nature-World do domu, ogrodu i dla zwierząt" fill priority sizes="100vw" className="-z-20 object-cover opacity-40" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102c20] via-[#173d2b]/85 to-[#173d2b]/20" />
+      <div className="mx-auto grid min-h-[430px] max-w-7xl items-center gap-8 px-5 py-16 md:min-h-[500px] md:grid-cols-[1fr_auto] md:px-8">
         <div>
-          <Link href="/" className="inline-flex">
-            <Image
-              src="/api/image/logo.webp"
-              alt="Nature World"
-              width={180}
-              height={45}
-            />
-          </Link>
-          <p className="mt-5 max-w-sm text-sm leading-7 text-text-secondary">
-            Nature World to sklep ogrodniczo-zoologiczny z ofertą stacjonarną i
-            online, rozwijany wokół sezonowych produktów, praktycznych
-            inspiracji i wygodnych zakupów.
-          </p>
-          <div className="mt-6 flex gap-3">
-            <Link
-              href={facebookUrl}
-              target="_blank"
-              aria-label="Facebook"
-              className="rounded-full bg-background p-3 text-primary transition hover:bg-primary hover:text-white"
-            >
-              <Facebook size={18} />
-            </Link>
-            <Link
-              href={facebookUrl}
-              target="_blank"
-              aria-label="Instagram"
-              className="rounded-full bg-background p-3 text-primary transition hover:bg-primary hover:text-white"
-            >
-              <Instagram size={18} />
-            </Link>
+          <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[.18em] text-lime-200"><Store size={17} />Nature-World</p>
+          <h1 style={{ color: "#ffffff" }} className="mt-5 max-w-3xl text-4xl font-semibold leading-tight tracking-tight !text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] md:text-6xl">Dla domu, ogrodu i Twoich zwierząt</h1>
+          <p className="mt-5 max-w-xl text-base leading-7 text-white/90 md:text-lg">Poznaj ofertę Nature-World i wybierz dział, którego szukasz.</p>
+          <div className="mt-8 flex flex-wrap gap-3"><Link href="/sklep" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-6 font-semibold text-[#173d2b] transition hover:bg-lime-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">Odkryj ofertę <ArrowRight size={18} /></Link><Link href="/sklep/dzial/ogrod" className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/60 bg-[#173d2b]/60 px-6 font-semibold text-white transition hover:bg-[#173d2b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">Dział OGRÓD</Link></div>
+        </div>
+        <div className="hidden rounded-3xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm md:block">
+          <p className="text-sm text-white/80">Znajdź swój dział</p>
+          <ul className="mt-4 space-y-2">{departments.map(({ title, href, icon: Icon }) => <li key={title}><Link className="flex items-center gap-3 rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/10" href={href}><Icon size={19} className="text-lime-200" />{title}<ArrowRight size={16} className="ml-auto" /></Link></li>)}</ul>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="departments-heading" className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">Odkryj Nature-World</p><h2 id="departments-heading" className="mt-2 text-3xl font-semibold text-[#173d2b] md:text-4xl">Wybierz dział</h2><p className="mt-2 max-w-xl text-sm leading-6 text-text-secondary">Trzy przejrzyste ścieżki do katalogu — wybierz tę, która pasuje do Twoich potrzeb.</p></div>
+        <Link href="/sklep" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">Cały katalog <ArrowRight size={16} /></Link>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {departments.map(({ title, description, href, icon: Icon, theme, iconTheme }, index) => <Link href={href} key={title} className={"group relative flex min-h-64 flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-sm ring-1 ring-black/[0.04] transition duration-300 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:min-h-72 md:p-7 " + theme}>
+          <span aria-hidden="true" className="absolute -right-12 -top-12 h-40 w-40 rounded-full border-[24px] border-white/45 transition-transform duration-500 group-hover:scale-110" />
+          <div className="relative flex items-start justify-between">
+            <span className={"flex h-14 w-14 items-center justify-center rounded-2xl " + iconTheme}><Icon size={27} strokeWidth={1.7} /></span>
+            <span className="text-xs font-bold tracking-[.16em] text-[#6b7d69]">0{index + 1}</span>
+          </div>
+          <div className="relative mt-10">
+            <h3 className="text-2xl font-bold tracking-wide text-[#173d2b]">{title}</h3>
+            <p className="mt-2 max-w-xs text-sm leading-6 text-[#50634f]">{description}</p>
+            <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">Przeglądaj dział <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" /></span>
+          </div>
+        </Link>)}
+      </div>
+    </section>
+
+    <HomeContent />
+
+    <section aria-labelledby="catalog-guide-heading" className="border-y border-[#dfe7d8] bg-[#f7f9f5]">
+      <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
+        <div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">Wygodne zakupy</p><h2 id="catalog-guide-heading" className="mt-2 text-3xl font-semibold tracking-tight text-[#173d2b]">Jak znaleźć właściwy produkt?</h2><p className="mt-3 text-sm leading-6 text-text-secondary">Skorzystaj z katalogu, kategorii albo wyszukiwarki — przejdź do produktów w kilku prostych krokach.</p></div>
+        <ol className="mt-8 grid gap-4 md:grid-cols-3">
+          {catalogSteps.map(({ number, title, description, icon: Icon }) => <li key={number} className="rounded-2xl border border-[#e1e8dc] bg-white p-5 shadow-sm md:p-6">
+            <div className="flex items-center justify-between"><span className="text-xs font-bold tracking-[.16em] text-primary">{number}</span><Icon size={20} className="text-primary" /></div>
+            <h3 className="mt-5 text-lg font-semibold text-[#173d2b]">{title}</h3><p className="mt-2 text-sm leading-6 text-text-secondary">{description}</p>
+          </li>)}
+        </ol>
+        <Link href="/sklep" className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-[#24652a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Przejdź do katalogu <ArrowRight size={16} /></Link>
+      </div>
+    </section>
+
+    <section className="mx-auto grid max-w-7xl gap-7 px-4 py-12 md:grid-cols-[.9fr_1.1fr] md:items-center md:px-8 md:py-16">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-[#edf3e9]"><Image src="/api/image/main_onas3.webp" alt="Asortyment sklepu Nature-World" fill sizes="(min-width: 768px) 40vw, 100vw" className="object-cover" /></div>
+      <div><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">O Nature-World</p><h2 className="mt-2 text-3xl font-semibold text-[#173d2b]">Asortyment do domu, ogrodu i dla zwierząt</h2><p className="mt-3 max-w-3xl text-sm leading-7 text-text-secondary">Nature-World łączy trzy obszary oferty: produkty zoologiczne, artykuły ogrodowe oraz wyposażenie i dodatki do domu. Przeglądaj katalog według działów lub użyj wyszukiwarki.</p><div className="mt-6 flex flex-wrap gap-3"><Link href="/sklep" className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 font-semibold text-white hover:bg-[#24652a]">Przeglądaj ofertę</Link><Link href="/#kontakt" className="inline-flex min-h-11 items-center justify-center rounded-full border border-primary/25 px-5 font-semibold text-primary hover:bg-[#edf3e9]">Kontakt ze sklepem</Link></div></div>
+    </section>
+
+    <section id="kontakt" aria-labelledby="contact-heading" className="border-t border-[#dfe7d8] bg-[#f7f9f5]">
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-12 md:grid-cols-[.9fr_1.1fr] md:px-8 md:py-16">
+        <div className="rounded-3xl bg-[#173d2b] p-7 text-white md:p-9">
+          <p className="text-xs font-bold uppercase tracking-[.18em] text-lime-200">Nature-World</p>
+          <h2 id="contact-heading" style={{ color: "#ffffff" }} className="mt-3 text-3xl font-semibold !text-white">Kontakt ze sklepem</h2>
+          <p className="mt-3 max-w-md text-sm leading-6 text-white/75">Masz pytanie dotyczące oferty lub zamówienia? Skontaktuj się z nami.</p>
+          <div className="mt-7 space-y-4">
+            <a href={storeContact.phoneHref} className="flex items-center gap-3 rounded-xl px-3 py-2 text-white transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10"><Phone size={18} /></span><span><span className="block text-xs text-white/60">Telefon</span><span className="font-semibold">{storeContact.phone}</span></span></a>
+            <a href={storeContact.emailHref} className="flex min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-white transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10"><Mail size={18} /></span><span className="min-w-0"><span className="block text-xs text-white/60">E-mail</span><span className="break-all font-semibold">{storeContact.email}</span></span></a>
           </div>
         </div>
-
-        <div>
-          <h2 className="font-semibold">Menu</h2>
-          <nav className="mt-5 grid gap-3 text-sm text-text-secondary">
-            <Link href="/aktualnosci" className="hover:text-primary">
-              Aktualności
-            </Link>
-            <a href="#oferta" className="hover:text-primary">
-              Oferta
-            </a>
-            <a href="#onas" className="hover:text-primary">
-              O nas
-            </a>
-            <a href="#kontakt" className="hover:text-primary">
-              Kontakt
-            </a>
-            <Link
-              href={allegroUrl}
-              target="_blank"
-              className="hover:text-primary"
-            >
-              Allegro
-            </Link>
-          </nav>
-        </div>
-
-        <div>
-          <h2 className="font-semibold">Oferta</h2>
-          <ul className="mt-5 grid gap-3 text-sm text-text-secondary">
-            <li>Ogród, rośliny i nasiona</li>
-            <li>Nawozy, podłoża i preparaty</li>
-            <li>Doniczki, osłonki i dekoracje</li>
-            <li>Produkty dla psów i kotów</li>
-            <li>Akwarystyka i akcesoria</li>
-          </ul>
-        </div>
-
-        <div>
-          <h2 className="font-semibold">Kontakt</h2>
-          <div className="mt-5 grid gap-3 text-sm text-text-secondary">
-            <p className="flex items-center gap-2">
-              <Phone className="text-primary" size={16} />
-              {phoneNumber}
-            </p>
-            <p className="flex items-center gap-2">
-              <Mail className="text-primary" size={16} />
-              {emailAddress}
-            </p>
-            <p className="flex items-center gap-2">
-              <MapPin className="text-primary" size={16} />
-              {storeAddress}
-            </p>
-            <p className="flex items-center gap-2">
-              <Clock className="text-primary" size={16} />
-              {openingHours}
-            </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col rounded-3xl border border-[#e1e8dc] bg-white p-6 shadow-sm sm:col-span-2 md:p-8">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf3e9] text-primary"><MapPin size={21} /></span>
+            <h3 className="mt-5 text-xl font-semibold text-[#173d2b]">Adres sklepu</h3>
+            <p className="mt-2 text-sm leading-6 text-text-secondary">{storeContact.address}</p>
+            <a href={storeContact.mapHref} target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-10 w-fit items-center gap-2 rounded-full bg-[#edf3e9] px-4 text-sm font-semibold text-[#173d2b] transition hover:bg-[#e2ecdb] focus-visible:outline-2 focus-visible:outline-primary">Otwórz mapę <ArrowRight size={16} /></a>
+          </div>
+          <div className="rounded-3xl border border-[#e1e8dc] bg-white p-6 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-[.14em] text-primary">Płatność</p>
+            <h3 className="mt-2 text-lg font-semibold text-[#173d2b]">{storeContact.payment}</h3>
+            <p className="mt-2 text-sm leading-6 text-text-secondary">Aktualnie dostępna forma płatności w sklepie.</p>
+          </div>
+          <div className="flex flex-col justify-between rounded-3xl bg-[#edf3e9] p-6">
+            <div><p className="text-xs font-bold uppercase tracking-[.14em] text-primary">Oferta</p><h3 className="mt-2 text-lg font-semibold text-[#173d2b]">Dom, ogród i zwierzęta</h3><p className="mt-2 text-sm leading-6 text-gray-600">Przejdź do katalogu Nature-World.</p></div>
+            <Link href="/sklep" className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-[#24652a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Przejdź do sklepu <ArrowRight size={17} /></Link>
           </div>
         </div>
       </div>
-
-      <div className="border-t border-black/5">
-        <div className="max-w-7xl mx-auto flex flex-col gap-4 px-4 py-6 text-sm text-text-secondary md:flex-row md:items-center md:justify-between">
-          <p>
-            © {new Date().getFullYear()} Nature World. Wszelkie prawa
-            zastrzeżone.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <span className="inline-flex items-center gap-2">
-              <Truck size={16} className="text-primary" />
-              Sklep stacjonarny
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <ShieldCheck size={16} className="text-primary" />
-              Allegro i dostawa
-            </span>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-function NewsCard({ post }: { post: NewsPost }) {
-  return (
-    <Link
-      href={`/aktualnosci#${post.slug}`}
-      className="animate-fade-up group overflow-hidden rounded-2xl bg-white/80 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-    >
-      <div className="relative aspect-video bg-white">
-        <Image
-          src={`/api/image/${post.images?.[0] ?? fallbackImage}`}
-          alt=""
-          fill
-          sizes="(min-width: 1024px) 33vw, 100vw"
-          className="object-cover transition duration-300 group-hover:scale-105"
-        />
-      </div>
-
-      <div className="p-6">
-        <p className="flex items-center gap-2 text-sm text-text-secondary">
-          <CalendarDays size={15} className="text-primary" />
-          {formatDate(post.publishedAt)}
-        </p>
-        <h3 className="mt-3 text-xl font-semibold leading-snug group-hover:text-primary">
-          {post.title}
-        </h3>
-        {post.excerpt && (
-          <p className="mt-3 line-clamp-3 text-sm leading-7 text-text-secondary">
-            {post.excerpt}
-          </p>
-        )}
-      </div>
-    </Link>
-  );
-}
-
-function SectionHeader({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description?: string;
-}) {
-  return (
-    <div className="max-w-3xl">
-      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
-        {eyebrow}
-      </p>
-      <h2 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl">
-        {title}
-      </h2>
-      {description && (
-        <p className="mt-4 leading-8 text-text-secondary">{description}</p>
-      )}
-    </div>
-  );
-}
-
-function CategoryCard({
-  icon: Icon,
-  title,
-  text,
-}: {
-  icon: LucideIcon;
-  title: string;
-  text: string;
-}) {
-  return (
-    <article className="animate-fade-up rounded-2xl bg-white/80 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
-      <Icon className="text-primary" size={30} />
-      <h3 className="mt-5 text-xl font-semibold">{title}</h3>
-      <p className="mt-3 text-sm leading-7 text-text-secondary">{text}</p>
-    </article>
-  );
-}
-
-function ContactRow({
-  icon: Icon,
-  label,
-  href,
-}: {
-  icon: LucideIcon;
-  label: string;
-  href?: string;
-}) {
-  const content = (
-    <>
-      <Icon className="shrink-0" size={20} />
-      <span className="font-medium">{label}</span>
-    </>
-  );
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        target={href.startsWith("http") ? "_blank" : undefined}
-        className="flex items-center gap-3 rounded-2xl bg-white/10 p-4 text-white transition hover:-translate-y-0.5 hover:bg-white/20"
-      >
-        {content}
-      </Link>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-4 text-white">
-      {content}
-    </div>
-  );
+    </section>
+  </main>;
 }

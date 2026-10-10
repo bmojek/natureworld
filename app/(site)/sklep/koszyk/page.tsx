@@ -2,135 +2,39 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/app/context/cart-context";
 import { getProductImageUrl } from "@/app/lib/product-images";
 
 export default function CartPage() {
-  const { items, updateQty, removeItem, total } = useCart();
-
+  const { items, ready, updateQty, removeItem, total } = useCart();
   const deliveryCost = total >= 99 ? 0 : 15;
   const grandTotal = total + deliveryCost;
 
-  if (items.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto p-12 text-center">
-        <h1 className="text-2xl font-bold mb-4">Twój koszyk jest pusty</h1>
-        <Link href="/" className="text-primary underline">
-          Wróć do zakupów
-        </Link>
-      </div>
-    );
-  }
+  if (!ready) return <main className="mx-auto min-h-[55vh] max-w-7xl px-5 py-16"><div className="h-48 animate-pulse rounded-3xl bg-[#edf1e9]" /></main>;
+  if (items.length === 0) return <main className="mx-auto flex min-h-[55vh] max-w-7xl flex-col items-center justify-center px-5 py-16 text-center"><span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#edf3e9] text-primary"><ShoppingBag size={34} /></span><h1 className="mt-6 text-3xl font-semibold text-[#173d2b]">Koszyk jest pusty</h1><p className="mt-3 max-w-md text-text-secondary">Wybierz dział i dodaj produkty, które chcesz zamówić.</p><div className="mt-7 flex flex-wrap justify-center gap-3"><Link href="/sklep" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-white hover:bg-[#24652a]">Przeglądaj produkty <ArrowRight size={17} /></Link><Link href="/sklep/dzial/zwierzeta" className="inline-flex min-h-12 items-center rounded-full bg-[#edf3e9] px-6 font-semibold text-[#173d2b] hover:bg-[#e2ecdb]">Dział zwierzęta</Link></div></main>;
 
-  return (
-    <main className="max-w-7xl min-h-screen mx-auto px-4 py-8 flex flex-col lg:flex-row gap-10">
-      {/* ================= LEFT ================= */}
-      <section className="flex-1 space-y-6">
-        <h1 className="text-2xl font-bold">Zawartość Twojego Koszyka</h1>
-
-        {/* INFO */}
-        <div className="bg-primary/10 rounded-xl p-4 text-sm">
-          🚚 Darmowa dostawa od <strong>99 zł</strong>
-        </div>
-
-        {/* ITEMS */}
-        <div className="bg-white rounded-xl divide-y">
-          {items.map((item) => (
-            <div
-              key={item.productId}
-              className="flex items-center gap-4 py-4 px-2"
-            >
-              {/* IMAGE */}
-              <Link
-                href={`/sklep/produkt/${item.slug}`}
-                className="w-20 h-20 bg-bg-muted rounded-md  overflow-hidden flex items-center justify-center"
-              >
-                <Image
-                  src={getProductImageUrl(item.image, "thumb")}
-                  alt={item.name}
-                  width={80}
-                  height={80}
-                  unoptimized
-                  className="object-contain"
-                />
-              </Link>
-              {/* NAME */}
-              <div className="flex-1">
-                <p className="font-medium">{item.name}</p>
-                <p className="text-sm text-text-secondary">
-                  {item.price.toFixed(2)} zł / szt.
-                </p>
-              </div>
-
-              {/* QTY */}
-              <div className="flex items-center gap-2 bg-bg-muted rounded-full px-3 py-1">
-                <button
-                  onClick={() => {
-                    if (item.qty === 1) {
-                      removeItem(item.productId);
-                    } else {
-                      updateQty(item.productId, item.qty - 1);
-                    }
-                  }}
-                  className="text-text-main hover:text-primary"
-                  aria-label="Zmniejsz ilość"
-                >
-                  {item.qty === 1 ? <Trash2 size={16} /> : <Minus size={16} />}
-                </button>
-
-                <span className="w-6 text-center">{item.qty}</span>
-
-                <button
-                  onClick={() => updateQty(item.productId, item.qty + 1)}
-                  className="text-text-main hover:text-primary"
-                  aria-label="Zwiększ ilość"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-
-              {/* PRICE */}
-              <div className="w-24 text-right font-medium">
-                {(item.price * item.qty).toFixed(2)} zł
-              </div>
-            </div>
-          ))}
-        </div>
+  return <main className="mx-auto min-h-[55vh] max-w-7xl px-4 py-8 md:px-8 md:py-12">
+    <nav aria-label="Okruszki" className="mb-5 text-sm text-text-secondary"><Link href="/sklep" className="hover:text-primary">Sklep</Link><span className="mx-2">/</span><span aria-current="page">Koszyk</span></nav>
+    <h1 className="text-3xl font-semibold text-[#173d2b] md:text-4xl">Twój koszyk</h1>
+    <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_350px]">
+      <section aria-label="Produkty w koszyku" className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5">
+        <ul className="divide-y divide-black/5">{items.map((item) => <li key={item.productId} className="flex flex-wrap items-center gap-3 p-4 sm:flex-nowrap sm:gap-5 sm:p-6">
+          <Link href={`/sklep/produkt/${item.slug}`} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#ffffff] sm:h-24 sm:w-24"><Image src={getProductImageUrl(item.image, "thumb")} alt={item.name} fill sizes="96px" unoptimized className="object-contain p-2" /></Link>
+          <div className="min-w-0 flex-1"><Link href={`/sklep/produkt/${item.slug}`} className="font-medium leading-6 text-[#173d2b] hover:text-primary">{item.name}</Link><p className="mt-1 text-sm text-text-secondary">{item.price.toFixed(2)} zł / szt.</p></div>
+          <div className="flex w-full items-center justify-between sm:w-auto sm:justify-start sm:gap-5">
+            <div className="inline-flex h-10 items-center gap-3 rounded-full border border-black/10 px-3"><button type="button" onClick={() => item.qty === 1 ? removeItem(item.productId) : updateQty(item.productId, item.qty - 1)} aria-label={item.qty === 1 ? `Usuń ${item.name}` : `Zmniejsz ilość: ${item.name}`} className="rounded p-1 text-text-secondary hover:text-primary">{item.qty === 1 ? <Trash2 size={16} /> : <Minus size={16} />}</button><span className="min-w-4 text-center text-sm font-medium" aria-live="polite">{item.qty}</span><button type="button" onClick={() => updateQty(item.productId, item.qty + 1)} aria-label={`Zwiększ ilość: ${item.name}`} className="rounded p-1 text-text-secondary hover:text-primary"><Plus size={16} /></button></div>
+            <p className="w-24 text-right font-semibold text-[#173d2b]">{(item.price * item.qty).toFixed(2)} zł</p>
+          </div>
+        </li>)}</ul>
+        <div className="border-t border-black/5 p-4 sm:p-6"><Link href="/sklep" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"><ArrowRight className="rotate-180" size={16} />Kontynuuj zakupy</Link></div>
       </section>
-
-      {/* ================= RIGHT ================= */}
-      <aside className="w-full lg:w-96 bg-bg-muted rounded-xl p-6 space-y-5 h-fit lg:sticky lg:top-24">
-        <Link
-          href="/sklep/checkout"
-          className="block bg-primary hover:opacity-90 text-white text-center font-semibold py-3 rounded-full"
-        >
-          Przejdź do kasy
-        </Link>
-
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>Suma</span>
-            <span>{total.toFixed(2)} zł</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>Dostawa</span>
-            <span>
-              {deliveryCost === 0 ? "Gratis" : `${deliveryCost.toFixed(2)} zł`}
-            </span>
-          </div>
-
-          <div className="border-t pt-3 flex justify-between font-semibold text-lg">
-            <span>Razem</span>
-            <span>{grandTotal.toFixed(2)} zł</span>
-          </div>
-        </div>
-
-        <p className="text-xs text-text-secondary">
-          Ceny zawierają podatek VAT
-        </p>
+      <aside className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5 lg:sticky lg:top-28 sm:p-6">
+        <h2 className="text-xl font-semibold text-[#173d2b]">Podsumowanie</h2>
+        <dl className="mt-5 space-y-3 text-sm"><div className="flex justify-between gap-3"><dt className="text-text-secondary">Produkty</dt><dd>{total.toFixed(2)} zł</dd></div><div className="flex justify-between gap-3"><dt className="text-text-secondary">Dostawa</dt><dd>{deliveryCost === 0 ? "0,00 zł" : `${deliveryCost.toFixed(2)} zł`}</dd></div><div className="flex justify-between gap-3 border-t border-black/10 pt-4 text-base font-semibold"><dt>Razem</dt><dd>{grandTotal.toFixed(2)} zł</dd></div></dl>
+        <p className="mt-4 text-xs leading-5 text-text-secondary">Podsumowanie ma charakter orientacyjny. Cena i dostępność są ponownie sprawdzane przy składaniu zamówienia.</p>
+        <Link href="/sklep/checkout" className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-white transition hover:bg-[#24652a]">Przejdź do kasy <ArrowRight size={17} /></Link>
       </aside>
-    </main>
-  );
+    </div>
+  </main>;
 }

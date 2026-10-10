@@ -1,139 +1,58 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { buildCategoryTree } from "@/app/lib/categories";
-import {
-  collectCategoryIds,
-  findCategoryBySlugPath,
-  findParentCategory,
-} from "@/app/lib/category-utils";
+import { House } from "lucide-react";
+import { buildCategoryTree, CategoryTree } from "@/app/lib/categories";
+import { categoryHasMenuProducts } from "@/app/lib/storefront-categories";
+import { findCategoryBySlugPath } from "@/app/lib/category-utils";
 import ProductsInfinite from "./products-infinite";
 import { CategoryModel } from "@/app/models/category";
-import { House } from "lucide-react";
 
-type PageProps = {
-  params: Promise<{
-    slug: string[];
-  }>;
-};
-function capitalizeFirstLetter(val: string) {
-  return String(val).charAt(0).toUpperCase() + String(val).slice(1);
-}
-// 🔑 FETCH Z API – TYLKO TUTAJ
+type PageProps = { params: Promise<{ slug: string[] }> };
+
 async function fetchCategories(): Promise<CategoryModel[]> {
-  const h = await headers();
-  const host = h.get("host");
-
-  if (!host) {
-    throw new Error("Missing host header");
-  }
-
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("host");
+  if (!host) return [];
   const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+  try {
+    const response = await fetch(`${protocol}://${host}/api/categories`, { next: { revalidate: 60 } });
+    return response.ok ? response.json() : [];
+  } catch { return []; }
+}
 
-  const res = await fetch(`${protocol}://${host}/api/categories`, {
-    next: { revalidate: 300 }, // cache Next.js
-  });
+function flattenOptions(nodes: CategoryTree[], prefix = ""): { id: string; name: string }[] {
+  return nodes.filter(categoryHasMenuProducts).flatMap((node) => [
+    ...(/^\d+$/.test(node.id) ? [{ id: node.id, name: `${prefix}${node.name}` }] : []),
+    ...flattenOptions(node.children, `${prefix}${node.name} / `),
+  ]);
+}
 
-  if (!res.ok) {
-    return [];
-  }
-
-  return res.json();
+function categoryTiles(category: CategoryTree, slugPath: string[]) {
+  return category.children.filter(categoryHasMenuProducts).map((child) => ({
+    id: child.id,
+    name: child.name,
+    href: `/sklep/kategoria/${[...slugPath, child.slug].join("/")}`,
+  }));
 }
 
 export default async function CategoryPage({ params }: PageProps) {
-  // 🔑 ZAWSZE await params
   const { slug } = await params;
-
-  // ✅ API zamiast Firestore
   const categories = await fetchCategories();
-  if (categories.length === 0) {
-    return (
-      <main className="mx-auto min-h-screen max-w-7xl px-6 py-16">
-        <h1 className="text-2xl font-semibold">Kategorie chwilowo niedostępne</h1>
-        <p className="mt-3 text-text-secondary">
-          Po skonfigurowaniu połączenia z Base pojawi się tu katalog produktów.
-        </p>
-      </main>
-    );
-  }
-
   const tree = buildCategoryTree(categories);
-
   const category = findCategoryBySlugPath(tree, slug);
-  if (!category) {
-    return <div className="p-12">Nie znaleziono kategorii</div>;
-  }
+  if (!category) return <main className="mx-auto min-h-[50vh] max-w-7xl px-4 py-16"><h1 className="text-2xl font-semibold">{categories.length ? "Nie znaleziono kategorii" : "Katalog chwilowo niedostępny"}</h1><p className="mt-2 text-text-secondary">{categories.length ? "Ta kategoria nie znajduje się w aktualnym katalogu." : "Nie udało się pobrać kategorii z Base.com. Spróbuj ponownie za chwilę."}</p></main>;
 
-  const categoryIds = collectCategoryIds(category);
-  const parentCategory = findParentCategory(tree, category.parentId);
-
-  return (
-    <main className="max-w-7xl min-h-screen mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-4 gap-8">
-      {/* ================= SIDEBAR ================= */}
-      <aside className="space-y-8">
-        {/* KATEGORIE */}
-        <div>
-          <h2 className="font-semibold text-lg mb-3">Kategorie</h2>
-
-          {/* ⬆️ POWRÓT WYŻEJ */}
-          {parentCategory && (
-            <Link
-              href={`/sklep/kategoria/${slug.slice(0, -1).join("/")}`}
-              className="block text-sm text-primary mb-3"
-            >
-              ← {parentCategory.name}
-            </Link>
-          )}
-
-          {/* ⬇️ PODKATEGORIE */}
-          {category.children.length > 0 ? (
-            <ul className="space-y-2">
-              {category.children.map((child) => (
-                <li key={child.id}>
-                  <Link
-                    href={`/sklep/kategoria/${[...slug, child.slug].join("/")}`}
-                    className="text-sm hover:underline"
-                  >
-                    {child.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-text-secondary">Brak podkategorii</p>
-          )}
-        </div>
-
-      </aside>
-
-      {/* ================= PRODUKTY ================= */}
-      <section className="md:col-span-3">
-        {/* BREADCRUMBS */}
-        <nav className="text-sm text-text-secondary mb-4 flex items-center gap-1">
-          <Link href="/sklep" className="flex items-center">
-            <House size={14} />
-          </Link>
-
-          {slug.map((s, i) => (
-            <span key={i} className="flex items-center gap-1">
-              <span>/</span>
-              <Link href={`/sklep/kategoria/${slug.slice(0, i + 1).join("/")}`}>
-                {capitalizeFirstLetter(s.replaceAll("-", " "))}
-              </Link>
-            </span>
-          ))}
-        </nav>
-
-        <h1 className="text-2xl font-bold mb-6">{category.name}</h1>
-
-        {categoryIds.length > 0 ? (
-          <ProductsInfinite categoryIds={categoryIds} />
-        ) : (
-          <p className="text-sm text-text-secondary">
-            Brak kategorii produktowych w tym dziale.
-          </p>
-        )}
-      </section>
-    </main>
-  );
+  const tiles = categoryTiles(category, slug);
+  const options = flattenOptions(category.children);
+  return <main className="mx-auto min-h-screen max-w-7xl px-4 py-7 md:px-6 md:py-10">
+    <nav aria-label="Okruszki" className="mb-5 flex flex-wrap items-center gap-2 text-sm text-text-secondary"><Link href="/sklep" aria-label="Strona sklepu" className="rounded p-1 hover:text-primary"><House size={16} /></Link>{slug.map((part, index) => <span key={`${part}-${index}`} className="flex items-center gap-2"><span aria-hidden="true">/</span><Link href={`/sklep/kategoria/${slug.slice(0, index + 1).join("/")}`} className="hover:text-primary">{index === slug.length - 1 ? category.name : part.replaceAll("-", " ")}</Link></span>)}</nav>
+    <header className="relative isolate overflow-hidden rounded-3xl bg-[#173d2b] px-6 py-8 text-white shadow-sm md:px-10 md:py-10">
+      <div aria-hidden="true" className="absolute -right-12 -top-20 -z-10 h-72 w-72 rounded-full bg-lime-300/10 blur-3xl" />
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-lime-200">Katalog Nature-World</p>
+      <h1 style={{ color: "#ffffff" }} className="mt-2 text-3xl font-semibold tracking-tight !text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] md:text-4xl">{category.name}</h1>
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-white/90">Przeglądaj produkty przypisane do tej kategorii i jej podkategorii.</p>
+    </header>
+    {tiles.length > 0 && <section aria-labelledby="category-subcategories" className="py-8 md:py-9"><div className="mb-4 flex items-end justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Odkryj więcej</p><h2 id="category-subcategories" className="mt-1 text-xl font-semibold md:text-2xl">Podkategorie</h2></div></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{tiles.map((tile) => <Link key={tile.id} href={tile.href} className="group flex min-h-20 items-center justify-between rounded-2xl bg-[#f3f6ef] p-4 transition-colors hover:bg-[#e8efe1] focus-visible:outline-2 focus-visible:outline-primary md:p-5"><span className="font-medium leading-snug group-hover:text-primary">{tile.name}</span><span aria-hidden="true" className="ml-3 text-xl text-primary transition-transform group-hover:translate-x-1">→</span></Link>)}</div></section>}
+    <section aria-label={`Produkty — ${category.name}`} className="border-t border-black/5 pt-7"><ProductsInfinite categoryPath={slug} categoryOptions={options} /></section>
+  </main>;
 }

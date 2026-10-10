@@ -4,4 +4,6 @@ export interface CategoryModel {
   slug: string;
   parentId: string | null;
   level: number;
+  hasAvailableProducts?: boolean;
+  hasProducts?: boolean;
 }

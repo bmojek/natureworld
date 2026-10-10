@@ -1,13 +1,38 @@
 import "server-only";
 
 import { BaseLinkerError, callBaseLinker } from "@/app/lib/base-linker";
+import {
+  getCachedBaseCategories,
+  getCachedBaseProductDetails,
+  getCachedBaseProductStock,
+  getCachedBaseProductsList,
+} from "@/app/lib/base-store-data-cache";
+import { createAsyncStaleCache } from "@/app/lib/base-store-cache-core";
+import {
+  BaseProductPriceError,
+  fetchAllBasePages,
+  priceFor,
+  parsePriceGroupId,
+} from "@/app/lib/base-store-core";
 import { CategoryModel } from "@/app/models/category";
 import { Product } from "@/app/models/product";
+import { CatalogQuery, expandCategorySelection, queryCatalogRecords } from "@/app/lib/catalog-query-core";
 
 const BASE_PAGE_SIZE = 1000;
 const PRODUCT_PAGE_CACHE_MS = 30_000;
-const CATEGORY_PRODUCTS_CACHE_MS = 120_000;
 const CATEGORY_REQUEST_CONCURRENCY = 4;
+const listingMemoryCache = createAsyncStaleCache<BaseProductRecord[]>({
+  freshTtlMs: 30_000,
+  staleTtlMs: 300_000,
+});
+const detailMemoryCache = createAsyncStaleCache<Record<string, BaseProductDetails>>({
+  freshTtlMs: 30_000,
+  staleTtlMs: 120_000,
+});
+const categoryMemoryCache = createAsyncStaleCache<CategoryModel[]>({
+  freshTtlMs: 300_000,
+  staleTtlMs: 3_600_000,
+});
 
 type BaseResponse = {
   status: "SUCCESS" | "ERROR";
@@ -37,15 +62,12 @@ type BaseProductDetails = BaseProductRecord & {
 type ProductPage = {
   products: Product[];
   cursor: string | null;
+  totalCount: number;
 };
 
 const productPageCache = new Map<
   string,
   { expiresAt: number; value: ProductPage }
->();
-const categoryProductsCache = new Map<
-  string,
-  { expiresAt: number; products: BaseProductRecord[] }
 >();
 
 function inventoryId() {
@@ -80,16 +102,15 @@ function productIdFromSlug(slug: string) {
   return match ? Number(match[1]) : null;
 }
 
-function priceFor(prices: Record<string, number> | undefined) {
-  if (!prices) return 0;
-
-  const defaultPriceGroup = process.env.BASELINKER_PRICE_GROUP_ID;
-  const configuredPrice = defaultPriceGroup
-    ? prices[defaultPriceGroup]
-    : undefined;
-  const price = configuredPrice ?? Object.values(prices)[0] ?? 0;
-
-  return Number(price) || 0;
+function configuredPriceGroupId() {
+  try {
+    return parsePriceGroupId(process.env.BASELINKER_PRICE_GROUP_ID);
+  } catch {
+    throw new BaseLinkerError(
+      "BASELINKER_PRICE_GROUP_ID must be configured as a positive integer.",
+      "NOT_CONFIGURED",
+    );
+  }
 }
 
 function stockFor(
@@ -121,6 +142,7 @@ function imagesFor(images: Record<string, string> | undefined) {
 function productFromBase(
   baseProduct: BaseProductRecord,
   details?: BaseProductDetails,
+  priceGroupId?: string,
 ): Product {
   const textFields = details?.text_fields ?? {};
   const content = textFields.description;
@@ -131,7 +153,7 @@ function productFromBase(
     name: details?.name ?? baseProduct.name,
     slug: productSlug(details?.name ?? baseProduct.name, baseProduct.id),
     sku,
-    price: priceFor(details?.prices ?? baseProduct.prices),
+    price: priceFor(details?.prices ?? baseProduct.prices, priceGroupId),
     taxRate: Number(details?.tax_rate ?? 23),
     stock: stockFor(
       details?.stock ?? baseProduct.stock,
@@ -147,15 +169,16 @@ function productFromBase(
 }
 
 export async function getBaseCategories(): Promise<CategoryModel[]> {
-  const response = await callBaseLinker<
+  return categoryMemoryCache.get(String(inventoryId()), async () => {
+  const response = await getCachedBaseCategories<
     BaseResponse & {
-      categories?: Array<{
+      categories: Array<{
         category_id: number;
         name: string;
         parent_id: number;
       }>;
     }
-  >("getInventoryCategories", { inventory_id: inventoryId() });
+  >(inventoryId());
 
   const categories = response.categories ?? [];
   if (!categories.some((category) => category.name.includes("/"))) {
@@ -233,18 +256,25 @@ export async function getBaseCategories(): Promise<CategoryModel[]> {
   }
 
   return [...nodes.values()];
+  });
 }
 
 export async function getBaseProductsPage({
   categoryId,
   categoryIds = categoryId ? [categoryId] : [],
   search,
+  query = { sort: "relevance", inStock: false },
+  selectedCategoryIds = [],
+  preview = false,
   page = 1,
   pageSize = 6,
 }: {
   categoryId?: string;
   categoryIds?: string[];
   search?: string;
+  query?: CatalogQuery;
+  selectedCategoryIds?: string[];
+  preview?: boolean;
   page?: number;
   pageSize?: number;
 }): Promise<ProductPage> {
@@ -254,61 +284,71 @@ export async function getBaseProductsPage({
     ...new Set(categoryIds.filter((id) => /^\d+$/.test(id))),
   ];
   if (categoryIds.length > 0 && normalizedCategoryIds.length === 0) {
-    return { products: [], cursor: null };
+    return { products: [], cursor: null, totalCount: 0 };
   }
-
-  const totalOffset = (safePage - 1) * safePageSize;
+  const requestedCategories = [...new Set(selectedCategoryIds.filter((id) => /^\d+$/.test(id)))];
+  if (requestedCategories.some((id) => !normalizedCategoryIds.includes(id))) {
+    return { products: [], cursor: null, totalCount: 0 };
+  }
+  let effectiveCategoryIds = requestedCategories.length ? requestedCategories : normalizedCategoryIds;
+  if (requestedCategories.length) {
+    const categories = await getBaseCategories();
+    effectiveCategoryIds = expandCategorySelection(categories, requestedCategories, normalizedCategoryIds);
+  }
+  // A preview is intentionally bounded. Full category listings keep the complete scope.
+  if (preview) effectiveCategoryIds = effectiveCategoryIds.slice(0, 6);
+  const priceGroupId = configuredPriceGroupId();
   const searchKey = search?.trim().toLowerCase() ?? "";
-  const cacheKey = `${normalizedCategoryIds.join(",") || "all"}:${searchKey}:${safePage}:${safePageSize}`;
+  const queryKey = JSON.stringify(query);
+  const cacheKey = `${inventoryId()}:${priceGroupId}:${effectiveCategoryIds.join(",") || "all"}:${searchKey}:${queryKey}:${preview ? "preview" : "full"}:${safePage}:${safePageSize}`;
   const cached = productPageCache.get(cacheKey);
 
   if (cached && cached.expiresAt > Date.now()) return cached.value;
 
   let allProducts: BaseProductRecord[];
-  if (normalizedCategoryIds.length > 0) {
+  if (effectiveCategoryIds.length > 0) {
     const categoryResults = new Map<string, BaseProductRecord[]>();
-    const pendingCategoryIds: string[] = [];
-
-    for (const id of normalizedCategoryIds) {
-      const categoryCacheKey = `${id}:${searchKey}`;
-      const cachedCategory = categoryProductsCache.get(categoryCacheKey);
-      if (cachedCategory && cachedCategory.expiresAt > Date.now()) {
-        categoryResults.set(id, cachedCategory.products);
-      } else {
-        pendingCategoryIds.push(id);
-      }
-    }
 
     let nextIndex = 0;
 
     const worker = async () => {
-      while (nextIndex < pendingCategoryIds.length) {
-        const id = pendingCategoryIds[nextIndex++];
-        const parameters: Record<string, unknown> = {
-          inventory_id: inventoryId(),
-          filter_category_id: Number(id),
-          page: 1,
-          filter_sort: "id ASC",
-          include_variants: false,
-        };
-        if (search?.trim()) parameters.filter_name = search.trim().slice(0, 200);
+      while (nextIndex < effectiveCategoryIds.length) {
+        const id = effectiveCategoryIds[nextIndex++];
+        const categoryCacheKey = `${inventoryId()}:${id}:${searchKey}:${preview ? "preview" : "full"}`;
+        const products = await listingMemoryCache.get(categoryCacheKey, async () =>
+          preview
+            ? getCachedBaseProductsList<BaseResponse & { products: Record<string, BaseProductRecord> }>({
+              inventory_id: inventoryId(),
+              filter_category_id: Number(id),
+              page: 1,
+              filter_sort: "id ASC",
+              include_variants: false,
+              ...(search?.trim() ? { filter_name: search.trim().slice(0, 200) } : {}),
+            }).then((listing) => Object.values(listing.products))
+            : fetchAllBasePages(async (basePage) => {
+            const parameters: Record<string, unknown> = {
+              inventory_id: inventoryId(),
+              filter_category_id: Number(id),
+              page: basePage,
+              filter_sort: "id ASC",
+              include_variants: false,
+            };
+            if (search?.trim()) parameters.filter_name = search.trim().slice(0, 200);
 
-        const listing = await callBaseLinker<
-          BaseResponse & { products?: Record<string, BaseProductRecord> }
-        >("getInventoryProductsList", parameters);
-        const products = Object.values(listing.products ?? {});
-        categoryProductsCache.set(`${id}:${searchKey}`, {
-          expiresAt: Date.now() + CATEGORY_PRODUCTS_CACHE_MS,
-          products,
-        });
+            const listing = await getCachedBaseProductsList<
+              BaseResponse & { products: Record<string, BaseProductRecord> }
+            >(parameters);
+            return Object.values(listing.products);
+          }, BASE_PAGE_SIZE),
+        );
         categoryResults.set(id, products);
       }
     };
 
-    if (pendingCategoryIds.length > 0) {
+    if (effectiveCategoryIds.length > 0) {
       await Promise.all(
         Array.from(
-          { length: Math.min(CATEGORY_REQUEST_CONCURRENCY, pendingCategoryIds.length) },
+          { length: Math.min(CATEGORY_REQUEST_CONCURRENCY, effectiveCategoryIds.length) },
           () => worker(),
         ),
       );
@@ -318,45 +358,63 @@ export async function getBaseProductsPage({
     for (const products of categoryResults.values()) {
       for (const product of products) uniqueProducts.set(String(product.id), product);
     }
-    allProducts = [...uniqueProducts.values()].sort((left, right) => left.id - right.id);
+    allProducts = [...uniqueProducts.values()];
   } else {
-    const basePage = Math.floor(totalOffset / BASE_PAGE_SIZE) + 1;
-    const pageOffset = totalOffset % BASE_PAGE_SIZE;
-    const parameters: Record<string, unknown> = {
-      inventory_id: inventoryId(),
-      page: basePage,
-      filter_sort: "id ASC",
-      include_variants: false,
-    };
-    if (search?.trim()) parameters.filter_name = search.trim().slice(0, 200);
-
-    const listing = await callBaseLinker<
-      BaseResponse & { products?: Record<string, BaseProductRecord> }
-    >("getInventoryProductsList", parameters);
-    allProducts = Object.values(listing.products ?? {});
-    const selected = allProducts.slice(pageOffset, pageOffset + safePageSize);
-    const resultProducts = await getProductDetails(selected);
-    const hasNextPage =
-      pageOffset + selected.length < allProducts.length ||
-      allProducts.length === BASE_PAGE_SIZE;
-    const value = {
-      products: resultProducts,
-      cursor: hasNextPage ? String(safePage + 1) : null,
-    };
-
-    productPageCache.set(cacheKey, {
-      expiresAt: Date.now() + PRODUCT_PAGE_CACHE_MS,
-      value,
+    const configuredInventoryId = inventoryId();
+    const listingCacheKey = `${configuredInventoryId}:all:${searchKey}:${preview ? "preview" : "full"}`;
+    allProducts = await listingMemoryCache.get(listingCacheKey, async () => {
+      if (preview) {
+        const listing = await getCachedBaseProductsList<BaseResponse & { products: Record<string, BaseProductRecord> }>({
+          inventory_id: configuredInventoryId,
+          page: 1,
+          filter_sort: "id ASC",
+          include_variants: false,
+          ...(search?.trim() ? { filter_name: search.trim().slice(0, 200) } : {}),
+        });
+        return Object.values(listing.products);
+      }
+      return fetchAllBasePages(async (basePage) => {
+        const parameters: Record<string, unknown> = {
+          inventory_id: configuredInventoryId,
+          page: basePage,
+          filter_sort: "id ASC",
+          include_variants: false,
+        };
+        if (search?.trim()) parameters.filter_name = search.trim().slice(0, 200);
+        const listing = await getCachedBaseProductsList<
+          BaseResponse & { products: Record<string, BaseProductRecord> }
+        >(parameters);
+        return Object.values(listing.products);
+      }, BASE_PAGE_SIZE);
     });
-    return value;
   }
 
-  const selected = allProducts.slice(totalOffset, totalOffset + safePageSize);
-  const products = await getProductDetails(selected);
-  const hasNextPage = totalOffset + selected.length < allProducts.length;
+  const stocks = query.inStock && !preview ? await getAllProductStock(effectiveCategoryIds, search) : undefined;
+  const queryRecords = allProducts.flatMap((product) => {
+    try {
+      return [{
+        product,
+        id: product.id,
+        name: product.name,
+        price: priceFor(product.prices, priceGroupId),
+        stock: stocks
+          ? stockFor(stocks[String(product.id)]?.stock, stocks[String(product.id)]?.reservations)
+          : stockFor(product.stock, undefined),
+      }];
+    } catch (error) {
+      if (error instanceof BaseProductPriceError) return [];
+      throw error;
+    }
+  });
+  const matchingProducts = queryCatalogRecords(queryRecords, query);
+  const totalCount = matchingProducts.length;
+  const selected = matchingProducts.slice((safePage - 1) * safePageSize, safePage * safePageSize).map((entry) => entry.product);
+  const products = await getProductDetails(selected, priceGroupId);
+  const hasNextPage = !preview && safePage * safePageSize < totalCount;
   const value = {
     products,
     cursor: hasNextPage ? String(safePage + 1) : null,
+    totalCount,
   };
 
   productPageCache.set(cacheKey, {
@@ -367,39 +425,67 @@ export async function getBaseProductsPage({
   return value;
 }
 
-async function getProductDetails(selected: BaseProductRecord[]) {
+type StockRecord = { product_id?: number; stock?: Record<string, number>; reservations?: Record<string, number> };
+
+async function getAllProductStock(categoryIds: string[], search?: string) {
+  const stockById: Record<string, StockRecord> = {};
+  const ids = categoryIds.length ? categoryIds : [""];
+  for (const categoryId of ids) {
+    await fetchAllBasePages(async (page) => {
+      const parameters: Record<string, unknown> = {
+        inventory_id: inventoryId(), page, filter_sort: "id ASC",
+      };
+      if (categoryId) parameters.filter_category_id = Number(categoryId);
+      if (search?.trim()) parameters.filter_name = search.trim().slice(0, 200);
+      const response = await getCachedBaseProductStock<BaseResponse & { products: Record<string, StockRecord> }>(parameters);
+      const records = Object.values(response.products ?? {});
+      for (const record of records) {
+        if (record.product_id) stockById[String(record.product_id)] = record;
+      }
+      return records.map((record) => ({ id: Number(record.product_id) }));
+    }, BASE_PAGE_SIZE);
+  }
+  return stockById;
+}
+
+async function getProductDetails(selected: BaseProductRecord[], priceGroupId: string) {
   const detailsById = new Map<number, BaseProductDetails>();
 
   if (selected.length) {
-    const details = await callBaseLinker<
-      BaseResponse & { products?: Record<string, BaseProductDetails> }
-    >("getInventoryProductsData", {
-      inventory_id: inventoryId(),
-      products: selected.map((product) => product.id),
-    });
+    const configuredInventoryId = inventoryId();
+    const ids = selected.map((product) => product.id).sort((left, right) => left - right);
+    const details = await detailMemoryCache.get(`${configuredInventoryId}:${ids.join(",")}`, () =>
+      getCachedBaseProductDetails<BaseResponse & { products: Record<string, BaseProductDetails> }>(
+        configuredInventoryId,
+        ids,
+      ).then((response) => response.products),
+    );
 
-    for (const [id, product] of Object.entries(details.products ?? {})) {
+    for (const [id, product] of Object.entries(details)) {
       detailsById.set(Number(id), product);
     }
   }
 
-  return selected.map((product) =>
-    productFromBase(product, detailsById.get(product.id)),
-  );
+  return selected.flatMap((product) => {
+    try {
+      return [productFromBase(product, detailsById.get(product.id), priceGroupId)];
+    } catch (error) {
+      if (error instanceof BaseProductPriceError) return [];
+      throw error;
+    }
+  });
 }
 
 export async function getBaseProductBySlug(slug: string) {
   const id = productIdFromSlug(slug);
   if (!id) return null;
+  const priceGroupId = configuredPriceGroupId();
 
-  const response = await callBaseLinker<
+  const response = await detailMemoryCache.get(`${inventoryId()}:product:${id}`, () => getCachedBaseProductDetails<
     BaseResponse & { products?: Record<string, BaseProductDetails> }
-  >("getInventoryProductsData", {
-    inventory_id: inventoryId(),
-    products: [id],
-  });
+  >(inventoryId(), [id]).then((data) => data.products ?? {}));
 
-  const product = response.products?.[String(id)];
+  const product = response[String(id)];
   if (!product) return null;
 
   const textFields = product.text_fields ?? {};
@@ -414,7 +500,12 @@ export async function getBaseProductBySlug(slug: string) {
     parent_id: product.parent_id,
   };
 
-  return productFromBase(summary, product);
+  try {
+    return productFromBase(summary, product, priceGroupId);
+  } catch (error) {
+    if (error instanceof BaseProductPriceError) return null;
+    throw error;
+  }
 }
 
 export async function getBaseProductsByIds(ids: string[]) {
@@ -422,6 +513,7 @@ export async function getBaseProductsByIds(ids: string[]) {
   if (!productIds.length || productIds.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
     return new Map<string, Product>();
   }
+  const priceGroupId = configuredPriceGroupId();
 
   const response = await callBaseLinker<
     BaseResponse & { products?: Record<string, BaseProductDetails> }
@@ -446,7 +538,12 @@ export async function getBaseProductsByIds(ids: string[]) {
       stock: details.stock,
     };
 
-    result.set(id, productFromBase(summary, details));
+    try {
+      result.set(id, productFromBase(summary, details, priceGroupId));
+    } catch (error) {
+      if (!(error instanceof BaseProductPriceError)) throw error;
+      // Omitting this product makes checkout validation reject it as unavailable.
+    }
   }
 
   return result;

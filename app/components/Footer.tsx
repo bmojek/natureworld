@@ -1,136 +1,48 @@
-"use client";
-
 import Link from "next/link";
-import { Mail, Phone, Truck, ShieldCheck } from "lucide-react";
 import Image from "next/image";
+import { Mail, MapPin, Phone } from "lucide-react";
+import { storeContact } from "@/app/lib/store-contact";
+
+const departments = [
+  ["ZWIERZĘTA", "/sklep/dzial/zwierzeta"],
+  ["OGRÓD", "/sklep/dzial/ogrod"],
+  ["DOM", "/sklep/dzial/dom"],
+] as const;
 
 export default function Footer() {
-  return (
-    <footer className="bg-background drop-shadow-2xl shadow-primary mt-16">
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-10">
-        {/* ================= BRAND ================= */}
-        <div className="space-y-4">
-          <Link href="/" className="shrink-0 pb-2">
-            <Image
-              src="/api/image/logo.webp"
-              alt="NatureWorld"
-              width={180}
-              height={45}
-              priority
-              className="pb-5"
-            />
-          </Link>
-          <p className="text-sm text-text-secondary">
-            Sklep ogrodniczy i zoologiczny oferujący produkty najwyższej jakości
-            dla Twojego ogrodu i zwierząt.
-          </p>
-
-          <div className="flex flex-col gap-2 text-sm text-text-secondary">
-            <div className="flex items-center gap-2">
-              <Phone size={16} />
-              +48 123 456 789
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Mail size={16} />
-              kontakt@natureworld.pl
-            </div>
-          </div>
-        </div>
-
-        {/* ================= SHOP ================= */}
-        <div>
-          <h3 className="font-semibold mb-4">Sklep</h3>
-
-          <ul className="space-y-2 text-sm text-text-secondary">
-            <li>
-              <Link href="/sklep/kategoria/ogrod" className="hover:text-primary">
-                Ogród
-              </Link>
-            </li>
-            <li>
-              <Link href="/sklep/kategoria/zwierzeta" className="hover:text-primary">
-                Zwierzęta
-              </Link>
-            </li>
-            <li>
-              <Link href="/promocje" className="hover:text-primary">
-                Promocje
-              </Link>
-            </li>
-            <li>
-              <Link href="/nowosci" className="hover:text-primary">
-                Nowości
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* ================= INFO ================= */}
-        <div>
-          <h3 className="font-semibold mb-4">Informacje</h3>
-
-          <ul className="space-y-2 text-sm text-text-secondary">
-            <li>
-              <Link href="/contact" className="hover:text-primary">
-                Kontakt
-              </Link>
-            </li>
-            <li>
-              <Link href="/terms" className="hover:text-primary">
-                Regulamin
-              </Link>
-            </li>
-            <li>
-              <Link href="/privacy" className="hover:text-primary">
-                Polityka prywatności
-              </Link>
-            </li>
-            <li>
-              <Link href="/returns" className="hover:text-primary">
-                Zwroty i reklamacje
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* ================= TRUST ================= */}
-        <div>
-          <h3 className="font-semibold mb-4">Zakupy bez ryzyka</h3>
-
-          <div className="space-y-3 text-sm text-text-secondary">
-            <div className="flex items-center gap-2">
-              <Truck size={16} />
-              Wysyłka 24–48h
-            </div>
-
-            <div className="flex items-center gap-2">
-              <ShieldCheck size={16} />
-              Bezpieczne płatności
-            </div>
-
-            <div className="flex items-center gap-2">✔ 14 dni na zwrot</div>
-          </div>
-        </div>
+  return <footer className="mt-12 border-t border-black/10 bg-[#173d2b] text-white">
+    <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:grid-cols-2 md:px-8 lg:grid-cols-[1.3fr_.8fr_1fr]">
+      <div>
+        <Link href="/" aria-label="Nature-World — strona główna" className="inline-block rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+          <Image src="/api/image/logo.webp" alt="Nature-World" width={180} height={48} className="h-12 w-auto object-contain brightness-0 invert" />
+        </Link>
+        <p className="mt-4 max-w-sm text-sm leading-6 text-white/70">Sklep z artykułami dla zwierząt, ogrodu i domu.</p>
       </div>
 
-      {/* ================= BOTTOM ================= */}
+      <nav aria-label="Działy sklepu">
+        <h2 className="font-semibold">Sklep</h2>
+        <ul className="mt-4 space-y-3 text-sm text-white/75">
+          <li><Link href="/sklep" className="hover:text-white">Wszystkie produkty</Link></li>
+          {departments.map(([label, href]) => <li key={href}><Link href={href} className="hover:text-white">{label}</Link></li>)}
+          <li><Link href="/aktualnosci" className="hover:text-white">Aktualności</Link></li>
+        </ul>
+      </nav>
 
-      <div className="shadow-2xl shadow-primary">
-        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center text-sm text-text-secondary">
-          <p>
-            © {new Date().getFullYear()} NatureWorld — Wszelkie prawa
-            zastrzeżone
-          </p>
-
-          <div className="flex gap-6 mt-3 md:mt-0">
-            <span>Visa</span>
-            <span>Mastercard</span>
-            <span>BLIK</span>
-            <span>PayU</span>
-          </div>
-        </div>
+      <div id="kontakt" className="scroll-mt-28">
+        <h2 className="font-semibold">Kontakt i zakupy</h2>
+        <ul className="mt-4 space-y-3 text-sm text-white/75">
+          <li><a className="inline-flex items-center gap-2 hover:text-white" href={storeContact.phoneHref}><Phone size={16} />{storeContact.phone}</a></li>
+          <li><a className="inline-flex items-center gap-2 hover:text-white" href={storeContact.emailHref}><Mail size={16} />{storeContact.email}</a></li>
+          <li><a className="inline-flex items-start gap-2 hover:text-white" href={storeContact.mapHref} target="_blank" rel="noreferrer"><MapPin size={16} className="mt-0.5 shrink-0" />{storeContact.address}</a></li>
+          <li className="pt-2 text-white/60">Dostępna metoda płatności: {storeContact.payment.toLowerCase()}.</li>
+        </ul>
       </div>
-    </footer>
-  );
+    </div>
+    <div className="border-t border-white/10">
+      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-5 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between md:px-8">
+        <p>© {new Date().getFullYear()} Nature-World</p>
+        <Link href="https://allegro.pl/uzytkownik/nature-world" target="_blank" rel="noreferrer" className="hover:text-white">Nature-World na Allegro</Link>
+      </div>
+    </div>
+  </footer>;
 }

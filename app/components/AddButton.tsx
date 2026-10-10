@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { Product } from "@/app/models/product";
 
-export default function AddToCartButton({ product }: { product: Product }) {
+export default function AddToCartButton({ product, quantity = 1 }: { product: Product; quantity?: number }) {
   const { addItem } = useCart();
   const [state, setState] = useState<"idle" | "adding" | "added">("idle");
 
@@ -20,7 +20,7 @@ export default function AddToCartButton({ product }: { product: Product }) {
       price: product.price,
       image: product.images[0],
       slug: product.slug,
-      qty: 1,
+      qty: Math.max(1, Math.floor(quantity)),
     });
 
     setTimeout(() => setState("added"), 300);
@@ -32,12 +32,12 @@ export default function AddToCartButton({ product }: { product: Product }) {
       onClick={handleAdd}
       className="
         relative overflow-hidden
-        h-14 px-8
+        h-12 w-full px-3
         rounded-full font-semibold
         bg-primary text-white
         flex items-center justify-center
         transition-colors duration-300
-        hover:bg-primary/90
+        hover:bg-[#24652a]
         active:scale-[0.99]
       "
     >

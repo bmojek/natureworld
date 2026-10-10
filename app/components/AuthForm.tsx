@@ -19,8 +19,8 @@ export default function AuthForm({ onSubmit, submitLabel }: AuthFormProps) {
     setError("");
     try {
       await onSubmit(email, password);
-    } catch (err: any) {
-      setError(err.message || "Wystąpił błąd");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Wystąpił błąd");
     } finally {
       setLoading(false);
     }
@@ -31,7 +31,7 @@ export default function AuthForm({ onSubmit, submitLabel }: AuthFormProps) {
       onSubmit={handleSubmit}
       className="max-w-sm w-full flex flex-col gap-4"
     >
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p role="alert" className="font-medium text-red-800">{error}</p>}
       <input
         type="email"
         placeholder="Email"
@@ -50,7 +50,7 @@ export default function AuthForm({ onSubmit, submitLabel }: AuthFormProps) {
       />
       <button
         type="submit"
-        className="bg-primary text-background p-2 rounded-lg hover:bg-accent disabled:opacity-50"
+        className="rounded-full bg-primary px-5 py-3 font-semibold text-white hover:bg-[#24652a] disabled:cursor-not-allowed disabled:bg-[#e7ebe6] disabled:text-[#56635a]"
         disabled={loading}
       >
         {submitLabel}
