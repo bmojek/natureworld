@@ -6,7 +6,7 @@ Serwerowy transport znajduje się w `app/lib/base-linker.ts`, a mapowanie katalo
 
 Sklep pobiera kategorie metodą `getInventoryCategories`, listy metodą `getInventoryProductsList`, a opisy i zdjęcia metodą `getInventoryProductsData`. Stany czytane są z magazynu `bl_47289` po odjęciu rezerwacji, a ceny z grupy `25779`. Base zwraca nazwy kategorii jako ścieżki, które adapter zamienia w drzewo nawigacji. Zdjęcia z Base są wyświetlane z ich URL-i.
 
-Produkty i kategorie sklepu pochodzą teraz z Base, nie z kolekcji `products`/`categories` Firestore. Listing ma krótkie cache serwerowe. Checkout tworzy niezapłacone zamówienie COD w Base; płatności online nie są jeszcze podłączone.
+Produkty i kategorie sklepu pochodzą z Base, nie z kolekcji `products`/`categories` Firestore. Listing ma krótkie cache serwerowe. Checkout nadal weryfikuje aktualne ceny i stany w Base, ale nowe zamówienia zapisuje w Firestore. Dostępna płatność to COD; płatności online nie są podłączone.
 
 ## Konfiguracja
 
@@ -18,7 +18,7 @@ Obecna konfiguracja używa katalogu `29152`, grupy cenowej `25779` i magazynu `b
 
 ## Docelowy przepływ
 
-Checkout ponownie waliduje ceny i dostępność po stronie serwera. Firestore `baseOrderRequests` przechowuje jedynie keyed HMAC żądania, stan próby i ID zamówienia Base, by zapobiegać duplikatom; nie przechowuje danych klienta ani pozycji zamówienia. Włącz TTL w Firestore dla pola `expireAt` na 90 dni. Przed uruchomieniem sprzedaży należy przetestować rezerwacje, anulacje i nieopłacone zamówienia. Koszyk przeglądarki nie jest źródłem prawdy dla ceny ani stanu.
+Checkout ponownie waliduje ceny i dostępność po stronie serwera. Nowe zamówienia oraz migawki danych klientów są zapisywane w Firestore `orders`, a `orderRequests` zapewnia idempotencję. `baseOrderRequests` pozostaje do obsługi prób z poprzedniej wersji checkoutu i nie jest kasowana. Włącz TTL w Firestore dla pola `expireAt` w tej starej kolekcji, jeśli nie jest już włączony. Koszyk przeglądarki nie jest źródłem prawdy dla ceny ani stanu. Odczyt z Base nie rezerwuje towaru.
 
 ## Dane poza katalogiem
 

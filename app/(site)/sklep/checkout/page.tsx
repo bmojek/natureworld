@@ -6,7 +6,8 @@ import { ArrowLeft, CheckCircle2, LoaderCircle, ShoppingBag } from "lucide-react
 import { useCart } from "@/app/context/cart-context";
 
 type CheckoutResponse = {
-  orderId?: number;
+  orderId?: string | number;
+  orderNumber?: string;
   total?: number;
   error?: string;
   safeToRetry?: boolean;
@@ -40,7 +41,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const [order, setOrder] = useState<{ id: number; total: number } | null>(null);
+  const [order, setOrder] = useState<{ number: string; total: number } | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
   const estimatedDelivery = total >= 99 ? 0 : 15;
@@ -82,7 +83,7 @@ export default function CheckoutPage() {
 
       if (response.status === 202) {
         setPending(true);
-        setError("Base nadal potwierdza status zamówienia. Użyj przycisku poniżej, aby sprawdzić ponownie.");
+        setError("Zamówienie jest zapisywane. Sprawdź status ponownie za chwilę.");
         return;
       }
 
@@ -103,13 +104,13 @@ export default function CheckoutPage() {
         return;
       }
 
-      setOrder({ id: result.orderId, total: result.total ?? estimatedGrandTotal });
+      setOrder({ number: result.orderNumber ?? String(result.orderId), total: result.total ?? estimatedGrandTotal });
       setPending(false);
       clearIdempotencyKey(idempotencyKey);
       clearCart();
     } catch {
       setPending(true);
-      setError("Nie udało się potwierdzić odpowiedzi Base. Sprawdź status ponownie, aby nie utworzyć duplikatu.");
+      setError("Nie udało się potwierdzić zapisu. Sprawdź status ponownie, aby uniknąć duplikatu.");
     } finally {
       setSubmitting(false);
     }
@@ -127,11 +128,11 @@ export default function CheckoutPage() {
       const result = (await response.json()) as CheckoutResponse & { state?: string };
 
       if (response.ok && result.state === "succeeded" && result.orderId) {
-        setOrder({ id: result.orderId, total: result.total ?? estimatedGrandTotal });
+        setOrder({ number: result.orderNumber ?? String(result.orderId), total: result.total ?? estimatedGrandTotal });
         clearIdempotencyKey(idempotencyKey);
         clearCart();
       } else if (response.status === 202) {
-        setError("Base nadal przetwarza zamówienie. Sprawdź ponownie za kilka sekund.");
+        setError("Zamówienie jest nadal zapisywane. Sprawdź ponownie za kilka sekund.");
       } else if (result.safeToRetry) {
         clearIdempotencyKey(idempotencyKey);
         setPending(false);
@@ -158,7 +159,7 @@ export default function CheckoutPage() {
           <p className="text-sm font-semibold uppercase text-primary">Zamówienie przyjęte</p>
           <h1 className="mt-2 text-3xl font-semibold">Dziękujemy za zakupy</h1>
           <p className="mt-4 text-text-secondary">
-            Numer zamówienia Base: <strong>{order.id}</strong>
+            Numer zamówienia: <strong>{order.number}</strong>
           </p>
           <p className="mt-2 text-text-secondary">
             Do zapłaty przy odbiorze: <strong>{order.total.toFixed(2)} zł</strong>

@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Orders and their idempotency/sequence metadata are accessed only by trusted server code.
+    match /orders/{orderId} {
+      allow read, write: if false;
+    }
+    match /orderRequests/{requestId} {
+      allow read, write: if false;
+    }
+    match /baseOrderRequests/{requestId} {
+      allow read, write: if false;
+    }
+    match /system/{document=**} {
+      allow read, write: if false;
+    }
+
+    // Published posts are public. Drafts and all changes require a trusted custom claim.
+    match /posts/{postId} {
+      allow read: if resource.data.isPublished == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Categories are currently managed directly by the signed-in admin UI.
+    match /categories/{categoryId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Deny access to collections not explicitly reviewed above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

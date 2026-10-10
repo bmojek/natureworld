@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import CategoriesForm from "./categories-form";
 import PostsForm from "./posts-form";
 import { useAuth } from "@/app/context/auth-context";
@@ -20,6 +21,10 @@ export default function AdminPage() {
   return (
     <main className="max-w-6xl mx-auto p-10">
       <h1 className="text-3xl font-bold mb-8">Panel admina</h1>
+
+      <Link href="/adminpanel/orders" className="mb-8 inline-flex rounded-lg bg-primary px-5 py-3 font-medium text-white hover:opacity-90">
+        Obsługa zamówień
+      </Link>
 
       {/* ZAKŁADKI */}
       <div className="flex gap-4 border-b mb-8">

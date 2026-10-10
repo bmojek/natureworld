@@ -16,7 +16,8 @@ Utwórz lokalny plik `.env.local` na podstawie `.env.example`. Nie zapisuj token
 - BaseLinker jest źródłem kategorii, produktów, cen i stanów.
 - Firebase Authentication obsługuje logowanie i nie wymaga Firestore.
 - Firestore pozostaje używany dla treści redakcyjnych i starego panelu kategorii.
-- Checkout, płatności i tworzenie zamówień w Base nie są jeszcze wdrożone.
+- Checkout zapisuje nowe zamówienia w Firestore; Base pozostaje źródłem danych katalogu i stanów.
+- Dostępna płatność to za pobraniem. Płatności online nie są podłączone.
 
 Zobacz [BASELINKER.md](BASELINKER.md) przed dalszą implementacją integracji.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
