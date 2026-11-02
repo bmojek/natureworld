@@ -26,7 +26,7 @@ export default function PrivacyPage() {
       <p>Dane są przetwarzane w celu zawarcia i wykonania umowy, wypełnienia obowiązków prawnych, obsługi roszczeń oraz — gdy jest to potrzebne — na podstawie prawnie uzasadnionego interesu administratora. Dane zamówień przechowujemy przez okres wymagany przepisami rachunkowymi i podatkowymi oraz niezbędny do obsługi roszczeń. Dane konta przechowujemy do czasu usunięcia konta, z zastrzeżeniem danych, które musimy zachować na podstawie prawa.</p>
     </LegalSection>
     <LegalSection title="4. Odbiorcy danych">
-      <p>Dane mogą być przekazywane w niezbędnym zakresie dostawcom usług IT i hostingu, Firebase/Google (uwierzytelnianie i baza zamówień), BaseLinker (weryfikacja produktów, cen i stanów), Vercel (hosting), Upstash (cache katalogu), Cloudflare (dostarczanie obrazów) oraz przewoźnikowi realizującemu dostawę. Sklep obecnie oferuje płatność za pobraniem i nie przekazuje danych do internetowej bramki płatniczej.</p>
+      <p>Dane mogą być przekazywane w niezbędnym zakresie dostawcom usług IT i hostingu, Firebase/Google (uwierzytelnianie i baza zamówień), BaseLinker (weryfikacja produktów, cen i stanów), Stripe (obsługa płatności internetowych), Vercel (hosting), Upstash (cache katalogu), Cloudflare (dostarczanie obrazów) oraz przewoźnikowi realizującemu dostawę. Dane karty są obsługiwane bezpośrednio przez Stripe; sklep nie zapisuje pełnych danych karty.</p>
       <p>Dostawcy usług mogą przetwarzać dane w państwach poza Europejskim Obszarem Gospodarczym. W takim przypadku przekazanie odbywa się z zastosowaniem mechanizmu wymaganego przez przepisy o ochronie danych.</p>
     </LegalSection>
     <LegalSection title="5. Prawa użytkownika">

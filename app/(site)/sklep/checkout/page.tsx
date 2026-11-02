@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, CheckCircle2, LoaderCircle, ShoppingBag } from "lucide-react";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import StripePaymentForm from "@/app/components/StripePaymentForm";
 import { useCart } from "@/app/context/cart-context";
 import { useAuth } from "@/app/context/auth-context";
 import { COURIER_SHIPPING_COST_PLN } from "@/app/lib/shipping";
@@ -13,9 +16,15 @@ type CheckoutResponse = {
   total?: number;
   error?: string;
   safeToRetry?: boolean;
+  clientSecret?: string;
+  paymentMethod?: string;
 };
 
 const idempotencyStorageKey = "natureworld-checkout-request";
+const pendingStripeOrderStorageKey = "natureworld-pending-stripe-order";
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
 function getIdempotencyKey(keyRef: { current: string | null }) {
   if (keyRef.current) return keyRef.current;
@@ -45,10 +54,44 @@ export default function CheckoutPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [order, setOrder] = useState<{ number: string; total: number } | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "stripe">("cod");
+  const [stripePayment, setStripePayment] = useState<{ clientSecret: string; number: string; total: number } | null>(null);
   const idempotencyKey = useRef<string | null>(null);
+  const stripeReturnHandled = useRef(false);
 
   const estimatedDelivery = COURIER_SHIPPING_COST_PLN;
   const estimatedGrandTotal = total + estimatedDelivery;
+
+  useEffect(() => {
+    const clientSecret = new URLSearchParams(window.location.search).get("payment_intent_client_secret");
+    if (!clientSecret || !stripePromise || stripeReturnHandled.current) return;
+    stripeReturnHandled.current = true;
+    let active = true;
+    void stripePromise.then(async (stripe) => {
+      if (!stripe) return;
+      const result = await stripe.retrievePaymentIntent(clientSecret);
+      if (!active) return;
+      if (result.error || result.paymentIntent?.status !== "succeeded") {
+        setError("Płatność nie została potwierdzona. Możesz spróbować ponownie.");
+        return;
+      }
+      try {
+        const pendingOrder = JSON.parse(sessionStorage.getItem(pendingStripeOrderStorageKey) ?? "null") as { number?: string; total?: number } | null;
+        if (!pendingOrder?.number || typeof pendingOrder.total !== "number") {
+          setError("Płatność przyjęto, ale nie udało się odczytać zamówienia. Skontaktuj się ze sklepem.");
+          return;
+        }
+        setPaymentMethod("stripe");
+        setOrder({ number: pendingOrder.number, total: pendingOrder.total });
+        sessionStorage.removeItem(pendingStripeOrderStorageKey);
+        clearIdempotencyKey(idempotencyKey);
+        clearCart();
+      } catch {
+        setError("Płatność przyjęto. Skontaktuj się ze sklepem, aby potwierdzić zamówienie.");
+      }
+    });
+    return () => { active = false; };
+  }, [clearCart]);
 
   async function submitOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -73,11 +116,13 @@ export default function CheckoutPage() {
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (user) headers.Authorization = `Bearer ${await user.getIdToken()}`;
-      const response = await fetch("/api/checkout", {
+      const requestKey = getIdempotencyKey(idempotencyKey);
+      const isOnlinePayment = paymentMethod === "stripe";
+      const response = await fetch(isOnlinePayment ? "/api/checkout/payment-intent" : "/api/checkout", {
         method: "POST",
         headers,
         body: JSON.stringify({
-          idempotencyKey: getIdempotencyKey(idempotencyKey),
+          idempotencyKey: requestKey,
           items: items.map(({ productId, qty }) => ({ productId, qty })),
           customer,
           termsAccepted: formData.get("terms") === "on",
@@ -85,6 +130,14 @@ export default function CheckoutPage() {
         }),
       });
       const result = (await response.json()) as CheckoutResponse;
+
+      if (isOnlinePayment && response.ok && result.clientSecret && result.orderNumber) {
+        const amount = result.total ?? estimatedGrandTotal;
+        sessionStorage.setItem(pendingStripeOrderStorageKey, JSON.stringify({ number: result.orderNumber, total: amount }));
+        setStripePayment({ clientSecret: result.clientSecret, number: result.orderNumber, total: amount });
+        setPending(false);
+        return;
+      }
 
       if (response.status === 202) {
         setPending(true);
@@ -114,7 +167,7 @@ export default function CheckoutPage() {
       clearIdempotencyKey(idempotencyKey);
       clearCart();
     } catch {
-      setPending(true);
+      setPending(paymentMethod === "cod");
       setError("Nie udało się potwierdzić zapisu. Sprawdź status ponownie, aby uniknąć duplikatu.");
     } finally {
       setSubmitting(false);
@@ -133,9 +186,12 @@ export default function CheckoutPage() {
       const result = (await response.json()) as CheckoutResponse & { state?: string };
 
       if (response.ok && result.state === "succeeded" && result.orderId) {
+        setPaymentMethod(result.paymentMethod === "stripe" ? "stripe" : "cod");
         setOrder({ number: result.orderNumber ?? String(result.orderId), total: result.total ?? estimatedGrandTotal });
         clearIdempotencyKey(idempotencyKey);
         clearCart();
+      } else if (result.state === "payment_pending") {
+        setError("Zamówienie zapisano, ale płatność nie jest potwierdzona. Ponów płatność online.");
       } else if (response.status === 202) {
         setError("Zamówienie jest nadal zapisywane. Sprawdź ponownie za kilka sekund.");
       } else if (result.safeToRetry) {
@@ -167,7 +223,7 @@ export default function CheckoutPage() {
             Numer zamówienia: <strong>{order.number}</strong>
           </p>
           <p className="mt-2 text-text-secondary">
-            Do zapłaty przy odbiorze: <strong>{order.total.toFixed(2)} zł</strong>
+            {paymentMethod === "stripe" ? "Płatność online potwierdzona:" : "Do zapłaty przy odbiorze:"} <strong>{order.total.toFixed(2)} zł</strong>
           </p>
           <Link href="/sklep" className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-white hover:bg-[#24652a]">
             <ShoppingBag size={18} /> Wróć do sklepu
@@ -197,7 +253,7 @@ export default function CheckoutPage() {
         <p className="mt-8 text-sm font-semibold uppercase text-primary">Finalizacja</p>
         <h1 className="mt-1 text-3xl font-semibold text-[#173d2b]">Dane do dostawy</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary">
-          Dostępna płatność: za pobraniem. Ceny i dostępność potwierdzimy ponownie w magazynie Base przy składaniu zamówienia.
+          Wybierz metodę płatności. Ceny i dostępność potwierdzimy ponownie w Base przy składaniu zamówienia.
         </p>
 
         <form onSubmit={submitOrder} className="mt-8 space-y-7 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5 md:p-8">
@@ -240,6 +296,18 @@ export default function CheckoutPage() {
             </label>
           )}
 
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-semibold">Metoda płatności</legend>
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-black/10 p-4 has-[:checked]:border-primary has-[:checked]:bg-[#f4f8f2]">
+              <input type="radio" name="paymentMethod" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} className="mt-1 accent-primary" />
+              <span><strong className="block text-sm">Za pobraniem</strong><span className="text-xs text-text-secondary">Zapłata kurierowi przy odbiorze.</span></span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-black/10 p-4 has-[:checked]:border-primary has-[:checked]:bg-[#f4f8f2]">
+              <input type="radio" name="paymentMethod" checked={paymentMethod === "stripe"} onChange={() => setPaymentMethod("stripe")} className="mt-1 accent-primary" />
+              <span><strong className="block text-sm">Płatność online</strong><span className="text-xs text-text-secondary">BLIK, karty, Apple Pay i Google Pay — zależnie od urządzenia i dostępności w Stripe.</span></span>
+            </label>
+          </fieldset>
+
           <label className="block space-y-2">
             <span className="text-sm font-medium">Uwagi do zamówienia (opcjonalnie)</span>
             <textarea name="note" rows={3} maxLength={500} className="w-full resize-y rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
@@ -260,11 +328,23 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          <button type={pending ? "button" : "submit"} onClick={pending ? checkOrderStatus : undefined} disabled={submitting} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 font-semibold text-white transition hover:bg-[#24652a] disabled:cursor-wait disabled:bg-[#e7ebe6] disabled:text-[#56635a] disabled:opacity-100">
+          {!stripePayment && <button type={pending ? "button" : "submit"} onClick={pending ? checkOrderStatus : undefined} disabled={submitting} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 font-semibold text-white transition hover:bg-[#24652a] disabled:cursor-wait disabled:bg-[#e7ebe6] disabled:text-[#56635a] disabled:opacity-100">
             {submitting && <LoaderCircle className="animate-spin" size={18} />}
-            {pending ? "Sprawdź status zamówienia" : submitting ? "Wysyłanie…" : "Złóż zamówienie za pobraniem"}
-          </button>
+            {pending ? "Sprawdź status zamówienia" : submitting ? "Wysyłanie…" : paymentMethod === "stripe" ? "Przejdź do płatności" : "Złóż zamówienie za pobraniem"}
+          </button>}
         </form>
+
+        {stripePayment && stripePromise && (
+          <Elements stripe={stripePromise} options={{ clientSecret: stripePayment.clientSecret, appearance: { theme: "stripe" } }}>
+            <StripePaymentForm onPaid={() => {
+              setPaymentMethod("stripe");
+              setOrder({ number: stripePayment.number, total: stripePayment.total });
+              sessionStorage.removeItem(pendingStripeOrderStorageKey);
+              clearIdempotencyKey(idempotencyKey);
+              clearCart();
+            }} />
+          </Elements>
+        )}
       </section>
 
       <aside className="h-fit rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5 lg:sticky lg:top-28 md:p-6">

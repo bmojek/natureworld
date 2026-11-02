@@ -95,6 +95,7 @@ export async function createFirestoreOrder(value: unknown, ownerUid?: string): P
         countryCode: "PL",
       },
       ...INITIAL_ORDER_STATE,
+      paymentMethod: input.paymentMethod,
       idempotencyKey: input.idempotencyKey,
     };
 

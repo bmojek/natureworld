@@ -45,7 +45,11 @@ export class OrderProductError extends Error {
 export function digestOrderRequest(input: CreateOrderInput, secret: string) {
   if (!secret) throw new Error("An idempotency secret is required.");
   return createHmac("sha256", secret)
-    .update(JSON.stringify({ items: input.items, customer: input.customer }))
+    .update(JSON.stringify({
+      items: input.items,
+      customer: input.customer,
+      ...(input.paymentMethod === "stripe" ? { paymentMethod: input.paymentMethod } : {}),
+    }))
     .digest("hex");
 }
 
@@ -111,6 +115,7 @@ export function normalizeCreateOrderInput(value: unknown): CreateOrderInput {
 
   return {
     idempotencyKey,
+    paymentMethod: body.paymentMethod === "stripe" ? "stripe" : "cod",
     items: [...quantities].map(([productId, qty]) => ({ productId, qty })),
     customer,
   };

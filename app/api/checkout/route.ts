@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
   let input: CreateOrderInput;
   try {
-    input = normalizeCreateOrderInput(rawBody);
+    input = normalizeCreateOrderInput({ ...(rawBody as Record<string, unknown>), paymentMethod: "cod" });
   } catch {
     return jsonError(400, "INVALID_CHECKOUT_DATA");
   }
@@ -187,10 +187,12 @@ export async function GET(request: NextRequest) {
     const order = await getFirestoreOrderByIdempotencyKey(key);
     if (order) {
       return NextResponse.json({
-        state: "succeeded",
+        state: order.paymentMethod === "stripe" && order.paymentStatus !== "paid" ? "payment_pending" : "succeeded",
         orderId: order.id,
         orderNumber: order.orderNumber,
         total: order.total,
+        paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
       }, { headers: { "Cache-Control": "no-store" } });
     }
 

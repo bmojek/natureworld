@@ -5,7 +5,7 @@ import { storeContact } from "@/app/lib/store-contact";
 
 export const metadata: Metadata = {
   title: "Regulamin sklepu internetowego",
-  description: "Regulamin zakupów w sklepie internetowym Nature-World: składanie zamówień, płatność za pobraniem, dostawa, odstąpienie i reklamacje.",
+  description: "Regulamin zakupów w sklepie internetowym Nature-World: składanie zamówień, płatności, dostawa, odstąpienie i reklamacje.",
   alternates: { canonical: "/regulamin" },
 };
 
@@ -17,11 +17,11 @@ export default function TermsPage() {
     </LegalSection>
     <LegalSection title="2. Składanie i realizacja zamówień">
       <p>Informacje o produktach i cenach są prezentowane w sklepie. Ceny podawane są w złotych polskich i obejmują podatki. Koszty dostawy są pokazane w koszyku i przed złożeniem zamówienia.</p>
-      <p>Aby złożyć zamówienie, wybierz produkty, przejdź do koszyka, podaj dane potrzebne do dostawy, zaakceptuj regulamin i wybierz przycisk „Złóż zamówienie za pobraniem”. Sklep potwierdzi przyjęcie zamówienia na stronie po jego zapisaniu.</p>
+      <p>Aby złożyć zamówienie, wybierz produkty, przejdź do koszyka, podaj dane potrzebne do dostawy, zaakceptuj regulamin i wybierz jedną z metod płatności dostępnych w checkoutcie. Sklep potwierdzi przyjęcie zamówienia na stronie po jego zapisaniu.</p>
       <p>Jeśli produktu zabraknie lub jego cena zmieni się przed potwierdzeniem zamówienia, sklep poinformuje o tym i nie potwierdzi zakupu na nieaktualnych warunkach.</p>
     </LegalSection>
     <LegalSection title="3. Płatność i dostawa">
-      <p>Aktualnie dostępna metoda płatności to płatność za pobraniem — przy odbiorze przesyłki.</p>
+      <p>Dostępne metody płatności są prezentowane w checkoutcie. Mogą obejmować płatność za pobraniem oraz płatności online obsługiwane przez Stripe, w tym BLIK, karty i portfele Apple Pay lub Google Pay, jeśli są dostępne dla urządzenia i transakcji. Płatność online uznajemy za otrzymaną po potwierdzeniu jej przez operatora.</p>
       <p>Sklep oferuje dostawę kurierem za stałą opłatą 10 zł za zamówienie. Koszt jest doliczany niezależnie od wartości produktów. Informacja wyświetlona w koszyku przed wysłaniem zamówienia jest wiążącym podsumowaniem kosztów.</p>
       <p>Informacja o wysyłce w ciągu 24 godzin dotyczy produktów dostępnych na stanie i jest liczona w dniach roboczych. W razie okoliczności mogących opóźnić wysyłkę sklep skontaktuje się z klientem.</p>
     </LegalSection>

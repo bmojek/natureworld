@@ -1,7 +1,7 @@
 import type { Timestamp } from "firebase-admin/firestore";
 
 /** Firestore order document. This model is only consumed by server code. */
-export type OrderPaymentMethod = "cod";
+export type OrderPaymentMethod = "cod" | "stripe";
 export type OrderDeliveryMethod = "courier";
 export type OrderPaymentStatus = "unpaid" | "paid" | "refunded";
 export type OrderFulfillmentStatus =
@@ -69,12 +69,14 @@ export interface OrderModel {
   paymentStatus: OrderPaymentStatus;
   fulfillmentStatus: OrderFulfillmentStatus;
   updatedAt?: Timestamp;
+  stripePaymentIntentId?: string;
   statusHistory?: OrderStatusHistoryEntry[];
   idempotencyKey: string;
 }
 
 export interface CreateOrderInput {
   idempotencyKey: string;
+  paymentMethod: OrderPaymentMethod;
   items: Array<{ productId: string; qty: number }>;
   customer: OrderCustomerInput;
 }
