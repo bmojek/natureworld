@@ -5,10 +5,11 @@ import Link from "next/link";
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/app/context/cart-context";
 import { getProductImageUrl } from "@/app/lib/product-images";
+import { COURIER_SHIPPING_COST_PLN } from "@/app/lib/shipping";
 
 export default function CartPage() {
   const { items, ready, updateQty, removeItem, total } = useCart();
-  const deliveryCost = total >= 99 ? 0 : 15;
+  const deliveryCost = COURIER_SHIPPING_COST_PLN;
   const grandTotal = total + deliveryCost;
 
   if (!ready) return <main className="mx-auto min-h-[55vh] max-w-7xl px-5 py-16"><div className="h-48 animate-pulse rounded-3xl bg-[#edf1e9]" /></main>;
@@ -21,9 +22,9 @@ export default function CartPage() {
       <section aria-label="Produkty w koszyku" className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5">
         <ul className="divide-y divide-black/5">{items.map((item) => <li key={item.productId} className="flex flex-wrap items-center gap-3 p-4 sm:flex-nowrap sm:gap-5 sm:p-6">
           <Link href={`/sklep/produkt/${item.slug}`} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#ffffff] sm:h-24 sm:w-24"><Image src={getProductImageUrl(item.image, "thumb")} alt={item.name} fill sizes="96px" unoptimized className="object-contain p-2" /></Link>
-          <div className="min-w-0 flex-1"><Link href={`/sklep/produkt/${item.slug}`} className="font-medium leading-6 text-[#173d2b] hover:text-primary">{item.name}</Link><p className="mt-1 text-sm text-text-secondary">{item.price.toFixed(2)} zł / szt.</p></div>
+          <div className="min-w-0 flex-1"><Link href={`/sklep/produkt/${item.slug}`} className="font-medium leading-6 text-[#173d2b] hover:text-primary">{item.name}</Link><p className="mt-1 text-sm text-text-secondary">{item.price.toFixed(2)} zł / szt.</p><p className="mt-1 text-xs text-text-secondary">{item.stock === 0 ? "Brak w magazynie" : Number.isSafeInteger(item.stock) ? item.qty > item.stock! ? `W koszyku: ${item.qty} · dostępne: ${item.stock}` : `Dostępne na stanie: ${item.stock}` : "Dostępność zostanie sprawdzona przy składaniu zamówienia"}</p></div>
           <div className="flex w-full items-center justify-between sm:w-auto sm:justify-start sm:gap-5">
-            <div className="inline-flex h-10 items-center gap-3 rounded-full border border-black/10 px-3"><button type="button" onClick={() => item.qty === 1 ? removeItem(item.productId) : updateQty(item.productId, item.qty - 1)} aria-label={item.qty === 1 ? `Usuń ${item.name}` : `Zmniejsz ilość: ${item.name}`} className="rounded p-1 text-text-secondary hover:text-primary">{item.qty === 1 ? <Trash2 size={16} /> : <Minus size={16} />}</button><span className="min-w-4 text-center text-sm font-medium" aria-live="polite">{item.qty}</span><button type="button" onClick={() => updateQty(item.productId, item.qty + 1)} aria-label={`Zwiększ ilość: ${item.name}`} className="rounded p-1 text-text-secondary hover:text-primary"><Plus size={16} /></button></div>
+            <div className="inline-flex h-10 items-center gap-3 rounded-full border border-black/10 px-3"><button type="button" onClick={() => item.qty === 1 ? removeItem(item.productId) : updateQty(item.productId, item.qty - 1)} aria-label={item.qty === 1 ? `Usuń ${item.name}` : `Zmniejsz ilość: ${item.name}`} className="rounded p-1 text-text-secondary hover:text-primary">{item.qty === 1 ? <Trash2 size={16} /> : <Minus size={16} />}</button><span className="min-w-4 text-center text-sm font-medium" aria-live="polite">{item.qty}</span><button type="button" disabled={!Number.isSafeInteger(item.stock) || item.qty >= item.stock!} onClick={() => updateQty(item.productId, item.qty + 1)} aria-label={`Zwiększ ilość: ${item.name}`} className="rounded p-1 text-text-secondary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"><Plus size={16} /></button></div>
             <p className="w-24 text-right font-semibold text-[#173d2b]">{(item.price * item.qty).toFixed(2)} zł</p>
           </div>
         </li>)}</ul>
@@ -31,7 +32,7 @@ export default function CartPage() {
       </section>
       <aside className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5 lg:sticky lg:top-28 sm:p-6">
         <h2 className="text-xl font-semibold text-[#173d2b]">Podsumowanie</h2>
-        <dl className="mt-5 space-y-3 text-sm"><div className="flex justify-between gap-3"><dt className="text-text-secondary">Produkty</dt><dd>{total.toFixed(2)} zł</dd></div><div className="flex justify-between gap-3"><dt className="text-text-secondary">Dostawa</dt><dd>{deliveryCost === 0 ? "0,00 zł" : `${deliveryCost.toFixed(2)} zł`}</dd></div><div className="flex justify-between gap-3 border-t border-black/10 pt-4 text-base font-semibold"><dt>Razem</dt><dd>{grandTotal.toFixed(2)} zł</dd></div></dl>
+        <dl className="mt-5 space-y-3 text-sm"><div className="flex justify-between gap-3"><dt className="text-text-secondary">Produkty</dt><dd>{total.toFixed(2)} zł</dd></div><div className="flex justify-between gap-3"><dt className="text-text-secondary">Dostawa kurierem</dt><dd>{deliveryCost.toFixed(2)} zł</dd></div><div className="flex justify-between gap-3 border-t border-black/10 pt-4 text-base font-semibold"><dt>Razem</dt><dd>{grandTotal.toFixed(2)} zł</dd></div></dl>
         <p className="mt-4 text-xs leading-5 text-text-secondary">Podsumowanie ma charakter orientacyjny. Cena i dostępność są ponownie sprawdzane przy składaniu zamówienia.</p>
         <Link href="/sklep/checkout" className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-white transition hover:bg-[#24652a]">Przejdź do kasy <ArrowRight size={17} /></Link>
       </aside>

@@ -25,7 +25,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const saved = localStorage.getItem("cart");
       if (saved) {
         const parsed: unknown = JSON.parse(saved);
-        if (Array.isArray(parsed)) setItems(parsed as CartItem[]);
+        if (Array.isArray(parsed)) setItems(parsed.filter((item): item is CartItem =>
+          item && typeof item === "object" && typeof item.productId === "string" &&
+          typeof item.name === "string" && Number.isFinite(item.price) && Number.isSafeInteger(item.qty) && item.qty > 0,
+        ));
       }
     } catch {
       localStorage.removeItem("cart");
@@ -40,14 +43,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, ready]);
 
   const addItem = (item: CartItem) => {
+    const stock = Number.isSafeInteger(item.stock) ? Math.max(0, item.stock as number) : 0;
+    if (stock <= 0) return;
     setItems((prev) => {
       const found = prev.find((p) => p.productId === item.productId);
       if (found) {
         return prev.map((p) =>
-          p.productId === item.productId ? { ...p, qty: p.qty + item.qty } : p,
+          p.productId === item.productId
+            ? { ...p, stock, qty: Math.min(stock, p.qty + item.qty) }
+            : p,
         );
       }
-      return [...prev, item];
+      return [...prev, { ...item, stock, qty: Math.min(stock, item.qty) }];
     });
   };
 
@@ -57,7 +64,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const updateQty = (productId: string, qty: number) => {
     setItems((prev) =>
-      prev.map((p) => (p.productId === productId ? { ...p, qty } : p)),
+      prev.map((p) => (p.productId === productId
+        ? { ...p, qty: Math.max(1, Math.min(Number.isSafeInteger(p.stock) ? p.stock as number : 50, Math.floor(qty))) }
+        : p)),
     );
   };
 

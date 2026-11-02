@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/app/lib/firebase";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
@@ -13,15 +13,36 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setNotice("");
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/");
     } catch {
       setError("Nieprawidłowy email lub hasło");
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email.trim()) {
+      setError("Wpisz adres e-mail, aby otrzymać link do zmiany hasła.");
+      return;
+    }
+    setError("");
+    setNotice("");
+    setResetBusy(true);
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+    } catch {
+      // Keep the response generic so the page does not reveal whether an account exists.
+    } finally {
+      setNotice("Jeśli konto dla tego adresu istnieje, wysłaliśmy link do zmiany hasła.");
+      setResetBusy(false);
     }
   };
 
@@ -57,6 +78,12 @@ export default function LoginPage() {
               required
             />
           </div>
+          <div className="-mt-3 text-right">
+            <button type="button" onClick={() => void handlePasswordReset()} disabled={resetBusy} className="text-sm font-medium text-primary underline-offset-4 hover:underline disabled:opacity-60">
+              {resetBusy ? "Wysyłanie…" : "Nie pamiętasz hasła?"}
+            </button>
+          </div>
+          {notice && <p role="status" className="text-center text-sm text-emerald-800">{notice}</p>}
 
           <div>
             <label htmlFor="login-password" className="mb-1 block text-sm">Hasło</label>

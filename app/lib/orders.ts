@@ -38,7 +38,7 @@ export async function buildOrderSnapshot(inputValue: unknown) {
  * Create an order and its idempotency record atomically. This server-only service is
  * used by the live checkout.
  */
-export async function createFirestoreOrder(value: unknown): Promise<CreateOrderResult> {
+export async function createFirestoreOrder(value: unknown, ownerUid?: string): Promise<CreateOrderResult> {
   const input = normalizeCreateOrderInput(value);
   const requestDigest = digestInput(input);
 
@@ -78,6 +78,7 @@ export async function createFirestoreOrder(value: unknown): Promise<CreateOrderR
     const nextNumber = (Number(counterSnapshot.data()?.value) || 0) + 1;
     const order: Omit<OrderModel, "createdAt"> & { createdAt: FieldValue } = {
       id,
+      ...(ownerUid ? { ownerUid } : {}),
       orderNumber: `NW-${String(nextNumber).padStart(7, "0")}`,
       createdAt: FieldValue.serverTimestamp(),
       currency: "PLN",

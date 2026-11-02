@@ -17,8 +17,22 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Nature-World - Sklep Ogrodniczo-Zoologiczny",
-  description: "Nature-World - Sklep Ogrodniczo-Zoologiczny",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nature-world.pl"),
+  title: {
+    default: "Nature-World — sklep dla domu, ogrodu i zwierząt",
+    template: "%s | Nature-World",
+  },
+  description: "Kupuj online produkty dla zwierząt, domu i ogrodu. Sprawdź ofertę Nature-World, dostępność, dostawę i aktualności sklepu.",
+  applicationName: "Nature-World",
+  openGraph: {
+    type: "website",
+    locale: "pl_PL",
+    siteName: "Nature-World",
+    title: "Nature-World — sklep dla domu, ogrodu i zwierząt",
+    description: "Produkty dla zwierząt, domu i ogrodu w sklepie Nature-World.",
+  },
+  twitter: { card: "summary_large_image" },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

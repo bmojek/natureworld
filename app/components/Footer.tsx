@@ -11,7 +11,7 @@ const departments = [
 
 export default function Footer() {
   return <footer className="mt-12 border-t border-black/10 bg-[#173d2b] text-white">
-    <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:grid-cols-2 md:px-8 lg:grid-cols-[1.3fr_.8fr_1fr]">
+    <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:grid-cols-2 md:px-8 lg:grid-cols-[1.2fr_.8fr_.9fr_1fr]">
       <div>
         <Link href="/" aria-label="Nature-World — strona główna" className="inline-block rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
           <Image src="/api/image/logo.webp" alt="Nature-World" width={180} height={48} className="h-12 w-auto object-contain brightness-0 invert" />
@@ -25,6 +25,16 @@ export default function Footer() {
           <li><Link href="/sklep" className="hover:text-white">Wszystkie produkty</Link></li>
           {departments.map(([label, href]) => <li key={href}><Link href={href} className="hover:text-white">{label}</Link></li>)}
           <li><Link href="/aktualnosci" className="hover:text-white">Aktualności</Link></li>
+        </ul>
+      </nav>
+
+      <nav aria-label="Informacje i pomoc">
+        <h2 className="font-semibold">Informacje</h2>
+        <ul className="mt-4 space-y-3 text-sm text-white/75">
+          <li><Link href="/regulamin" className="hover:text-white">Regulamin sklepu</Link></li>
+          <li><Link href="/polityka-prywatnosci" className="hover:text-white">Polityka prywatności</Link></li>
+          <li><Link href="/dostawa-i-zwroty" className="hover:text-white">Dostawa, zwroty i reklamacje</Link></li>
+          <li><Link href="/formularz-odstapienia" className="hover:text-white">Formularz odstąpienia</Link></li>
         </ul>
       </nav>
 

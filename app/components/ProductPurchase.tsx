@@ -8,7 +8,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
   const stock = Math.max(1, Math.floor(product.stock));
   const update = (value: number) => setQuantity(Math.min(stock, Math.max(1, Number.isFinite(value) ? Math.floor(value) : 1)));
-  return <div className="w-full max-w-sm space-y-3">
+  return <div className="w-full space-y-3">
     <label htmlFor="product-quantity" className="block text-sm font-medium text-[#304a37]">Ilość</label>
     <div className="flex items-center gap-2">
       <button type="button" aria-label="Zmniejsz ilość" disabled={quantity <= 1} onClick={() => update(quantity - 1)} className="h-10 w-10 rounded-full border border-[#d8e1d4] text-lg disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-primary">−</button>

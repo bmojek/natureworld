@@ -9,7 +9,7 @@ import {
   OrderValidationError,
 } from "@/app/lib/orders";
 import { normalizeCreateOrderInput } from "@/app/lib/order-core";
-import { adminDb } from "@/app/lib/firebase-admin";
+import { adminAuth, adminDb } from "@/app/lib/firebase-admin";
 import type { CreateOrderInput } from "@/app/models/order";
 
 export const runtime = "nodejs";
@@ -110,6 +110,18 @@ export async function POST(request: NextRequest) {
     return jsonError(400, "INVALID_CHECKOUT_DATA");
   }
 
+  let ownerUid: string | undefined;
+  const authorization = request.headers.get("authorization");
+  if (authorization) {
+    const token = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
+    if (!token) return jsonError(401, "INVALID_SESSION");
+    try {
+      ownerUid = (await adminAuth.verifyIdToken(token, true)).uid;
+    } catch {
+      return jsonError(401, "INVALID_SESSION");
+    }
+  }
+
   try {
     // Preserve idempotency for requests created by the previous Base.com checkout.
     const oldRecord = await getLegacyRequest(input.idempotencyKey);
@@ -138,7 +150,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const result = await createFirestoreOrder(input);
+    const result = await createFirestoreOrder(input, ownerUid);
     return NextResponse.json({
       orderId: result.order.id,
       orderNumber: result.order.orderNumber,

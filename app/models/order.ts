@@ -52,6 +52,8 @@ export interface OrderShippingAddress {
 
 export interface OrderModel {
   id: string;
+  /** Firebase account that placed the order; absent for guest and legacy orders. */
+  ownerUid?: string;
   orderNumber: string;
   createdAt: Timestamp;
   currency: "PLN";

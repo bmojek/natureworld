@@ -13,6 +13,8 @@ type AccountOrder = {
   orderNumber: string;
   createdAt: string | null;
   items: Array<{ name: string; quantity: number; lineTotal: number }>;
+  customer: { fullName: string; phone: string };
+  shippingAddress: { street: string; postalCode: string; city: string };
   productTotal: number;
   deliveryCost: number;
   discountTotal: number;
@@ -43,35 +45,57 @@ function KontoContent() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [orders, setOrders] = useState<AccountOrder[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState("");
+  const [ordersCursor, setOrdersCursor] = useState<string | null>(null);
 
-  const loadOrders = useCallback(async (cursor?: string) => {
-    if (!user || !verified) return;
+  useEffect(() => {
+    setVerified(user?.emailVerified ?? false);
+  }, [user]);
+
+  const loadOrders = useCallback(async (cursor?: string, append = false) => {
+    if (!user) return;
     setOrdersLoading(true);
     setOrdersError("");
     try {
-      const token = await user.getIdToken();
-      const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-      const response = await fetch(`/api/account/orders${query}`, {
+      let token = await user.getIdToken();
+      const url = `/api/account/orders${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`;
+      let response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });
+      // Firebase ID tokens can retain the old email_verified claim after the
+      // user follows the verification link in another tab or device.
+      if (response.status === 401 || response.status === 403) {
+        await reload(user);
+        token = await user.getIdToken(true);
+        setVerified(user.emailVerified);
+        if (response.status === 403 && !user.emailVerified) {
+          setOrders([]);
+          setOrdersError("");
+          return;
+        }
+        response = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+      }
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Nie udało się pobrać zamówień.");
-      setOrders((existing) => cursor ? [...existing, ...payload.orders] : payload.orders);
-      setNextCursor(payload.nextCursor ?? null);
+      const loaded = Array.isArray(payload.orders) ? payload.orders : [];
+      setOrders((current) => append ? [...current, ...loaded] : loaded);
+      setOrdersCursor(typeof payload.nextCursor === "string" ? payload.nextCursor : null);
     } catch (cause) {
       setOrdersError(cause instanceof Error ? cause.message : "Nie udało się pobrać zamówień.");
     } finally {
       setOrdersLoading(false);
     }
-  }, [user, verified]);
+  }, [user]);
 
   useEffect(() => {
-    if (verified) void loadOrders();
-  }, [verified, loadOrders]);
+    setOrdersCursor(null);
+    void loadOrders();
+  }, [user, loadOrders]);
 
   async function refreshVerification() {
     if (!user) return;
@@ -80,6 +104,7 @@ function KontoContent() {
       await reload(user);
       await user.getIdToken(true);
       setVerified(user.emailVerified);
+      if (user.emailVerified) await loadOrders();
       setNotice(user.emailVerified ? "Adres e-mail jest zweryfikowany." : "Weryfikacja nie została jeszcze potwierdzona. Otwórz link z wiadomości i spróbuj ponownie.");
     } catch {
       setError("Nie udało się odświeżyć statusu weryfikacji.");
@@ -173,18 +198,30 @@ function KontoContent() {
 
         <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 md:p-8">
           <div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#edf3e9] text-primary"><Package /></div><div><h2 className="text-lg font-semibold text-[#173d2b]">Moje zamówienia</h2><p className="text-sm text-text-secondary">Historia zamówień przypisanych do tego adresu e-mail</p></div></div>
-          {!verified ? <div className="mt-6 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">Zweryfikuj adres e-mail, aby bezpiecznie wyświetlić zamówienia złożone na ten adres.</div> : ordersError ? <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-800">{ordersError}<button onClick={() => void loadOrders()} className="ml-2 font-semibold underline">Spróbuj ponownie</button></div> : null}
-          {verified && ordersLoading && orders.length === 0 && <p className="mt-6 flex items-center gap-2 text-sm text-text-secondary"><LoaderCircle className="animate-spin" size={16} /> Wczytujemy zamówienia…</p>}
-          {verified && !ordersLoading && !ordersError && orders.length === 0 && <p className="mt-6 rounded-2xl bg-[#f5f7f2] p-5 text-sm leading-6 text-text-secondary">Nie znaleźliśmy jeszcze zamówień złożonych na adres {user?.email}.</p>}
+          {!verified && <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">Starsze zamówienia przypisane tylko po adresie e-mail będą widoczne po jego weryfikacji.</div>}
+          {ordersError && <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-800">{ordersError}<button onClick={() => void loadOrders()} className="ml-2 font-semibold underline">Spróbuj ponownie</button></div>}
+          {ordersLoading && orders.length === 0 && <p className="mt-6 flex items-center gap-2 text-sm text-text-secondary"><LoaderCircle className="animate-spin" size={16} /> Wczytujemy zamówienia…</p>}
+          {!ordersLoading && !ordersError && orders.length === 0 && <p className="mt-6 rounded-2xl bg-[#f5f7f2] p-5 text-sm leading-6 text-text-secondary">Nie znaleźliśmy jeszcze zamówień przypisanych do konta.</p>}
           <div className="mt-5 space-y-4">
             {orders.map((order) => <article key={order.id} className="rounded-2xl border border-black/5 p-4 md:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold text-[#173d2b]">{order.orderNumber}</p><p className="mt-1 text-xs text-text-secondary">{order.createdAt ? new Intl.DateTimeFormat("pl-PL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(order.createdAt)) : "Data niedostępna"}</p></div><p className="font-bold text-[#173d2b]">{formatPrice(order.total)}</p></div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium"><span className="rounded-full bg-[#edf3e9] px-3 py-1 text-[#365443]">{fulfillmentLabels[order.fulfillmentStatus] ?? order.fulfillmentStatus}</span><span className="rounded-full bg-gray-100 px-3 py-1 text-gray-700">{paymentLabels[order.paymentStatus] ?? order.paymentStatus}</span></div>
               <ul className="mt-4 space-y-2 border-t border-black/5 pt-3 text-sm">{order.items.map((item, index) => <li key={`${item.name}-${index}`} className="flex justify-between gap-3 text-[#365443]"><span>{item.name} <span className="text-text-secondary">× {item.quantity}</span></span><span className="shrink-0">{formatPrice(item.lineTotal)}</span></li>)}</ul>
               <p className="mt-3 text-xs text-text-secondary">Dostawa: {formatPrice(order.deliveryCost)}{order.discountTotal > 0 ? ` · Rabat: ${formatPrice(order.discountTotal)}` : ""}</p>
+              <details className="mt-4 border-t border-black/5 pt-3 text-sm text-[#365443]">
+                <summary className="cursor-pointer font-semibold text-primary">Dane dostawy i podsumowanie</summary>
+                <div className="mt-3 space-y-1">
+                  <p>{order.customer.fullName}</p><p>{order.customer.phone}</p>
+                  <p>{order.shippingAddress.street}</p><p>{order.shippingAddress.postalCode} {order.shippingAddress.city}</p>
+                  <p className="pt-2">Płatność: {order.paymentMethod} · Dostawa: {order.deliveryMethod}</p>
+                  <p>Produkty: {formatPrice(order.productTotal)} · Dostawa: {formatPrice(order.deliveryCost)}</p>
+                  {order.discountTotal > 0 && <p>Rabat: −{formatPrice(order.discountTotal)}</p>}
+                  <p className="font-semibold">Razem: {formatPrice(order.total)}</p>
+                </div>
+              </details>
             </article>)}
           </div>
-          {nextCursor && <button type="button" disabled={ordersLoading} onClick={() => void loadOrders(nextCursor)} className="mt-5 min-h-11 rounded-full border border-primary/20 px-5 font-semibold text-primary hover:bg-[#edf3e9] disabled:opacity-60">{ordersLoading ? "Wczytywanie…" : "Pokaż starsze zamówienia"}</button>}
+          {ordersCursor && <button type="button" disabled={ordersLoading} onClick={() => void loadOrders(ordersCursor, true)} className="mt-5 min-h-11 w-full rounded-full border border-primary/20 font-semibold text-primary hover:bg-[#edf3e9] disabled:opacity-60">{ordersLoading ? "Wczytywanie…" : "Pokaż starsze zamówienia"}</button>}
         </section>
       </div>
       {(notice || error) && <div aria-live="polite" className={`mt-5 rounded-xl p-4 text-sm ${error ? "bg-red-50 text-red-800" : "bg-emerald-50 text-emerald-900"}`}>{error || notice}</div>}

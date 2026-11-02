@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { Boxes, House } from "lucide-react";
@@ -7,6 +8,17 @@ import ProductsInfinite from "../../kategoria/[...slug]/products-infinite";
 import { CategoryModel } from "@/app/models/category";
 
 type Props = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const names: Record<string, string> = { zwierzeta: "Produkty dla zwierząt", ogrod: "Produkty do ogrodu", dom: "Produkty do domu" };
+  const title = names[slug] ?? "Działy sklepu";
+  return {
+    title,
+    description: `Przeglądaj ${title.toLocaleLowerCase("pl-PL")} w sklepie Nature-World. Wybierz kategorię i sprawdź dostępne produkty.`,
+    alternates: { canonical: `/sklep/dzial/${encodeURIComponent(slug)}` },
+  };
+}
 
 async function fetchCategories(): Promise<CategoryModel[]> {
   const requestHeaders = await headers();

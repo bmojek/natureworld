@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Product } from "@/app/models/product";
+import { COURIER_SHIPPING_COST_GROSZE } from "@/app/lib/shipping";
 import type {
   CreateOrderInput,
   OrderCustomer,
@@ -8,8 +9,6 @@ import type {
 
 const MAX_ORDER_ITEMS = 30;
 const MAX_ITEM_QUANTITY = 50;
-const FREE_SHIPPING_THRESHOLD_GROSZE = 9_900;
-const STANDARD_SHIPPING_GROSZE = 1_500;
 const IDEMPOTENCY_KEY_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export const INITIAL_ORDER_STATE = {
@@ -157,9 +156,7 @@ export function buildOrderSnapshotFromProducts(
     });
   }
 
-  const deliveryGrosze = productTotalGrosze >= FREE_SHIPPING_THRESHOLD_GROSZE
-    ? 0
-    : STANDARD_SHIPPING_GROSZE;
+  const deliveryGrosze = COURIER_SHIPPING_COST_GROSZE;
   if (!Number.isSafeInteger(productTotalGrosze + deliveryGrosze)) {
     throw new OrderProductError("PRODUCT_UNAVAILABLE");
   }

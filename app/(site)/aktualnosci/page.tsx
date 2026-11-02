@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { ArrowLeft, ArrowRight, CalendarDays, Newspaper } from "lucide-react";
 import PostGallery from "@/app/components/Gallery/PostGallery";
+
+export const metadata: Metadata = {
+  title: "Aktualności i inspiracje",
+  description: "Aktualności, pomysły i informacje ze sklepu Nature-World.",
+  alternates: { canonical: "/aktualnosci" },
+};
 
 type NewsPost = { id: string; title: string; slug: string; excerpt?: string; content?: string; images?: string[]; publishedAt?: number | string | { seconds?: number; _seconds?: number } };
 

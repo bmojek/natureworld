@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { House } from "lucide-react";
@@ -8,6 +9,17 @@ import ProductsInfinite from "./products-infinite";
 import { CategoryModel } from "@/app/models/category";
 
 type PageProps = { params: Promise<{ slug: string[] }> };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const label = slug.at(-1)?.split("-").filter(Boolean).map((part) => part.charAt(0).toLocaleUpperCase("pl-PL") + part.slice(1)).join(" ") ?? "Produkty";
+  const path = `/sklep/kategoria/${slug.map(encodeURIComponent).join("/")}`;
+  return {
+    title: `${label} — produkty`,
+    description: `Sprawdź produkty z kategorii ${label} w sklepie Nature-World. Zobacz dostępne pozycje i aktualne ceny.`,
+    alternates: { canonical: path },
+  };
+}
 
 async function fetchCategories(): Promise<CategoryModel[]> {
   const requestHeaders = await headers();

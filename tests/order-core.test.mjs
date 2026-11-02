@@ -56,19 +56,19 @@ test("valid COD order uses authoritative catalog price and server totals", () =>
   assert.equal(snapshot.items[0].unitPrice, 12.35);
   assert.equal(snapshot.items[0].lineTotal, 24.7);
   assert.equal(snapshot.productTotal, 24.7);
-  assert.equal(snapshot.deliveryCost, 15);
+  assert.equal(snapshot.deliveryCost, 10);
   assert.equal(snapshot.discountTotal, 0);
-  assert.equal(snapshot.total, 39.7);
+  assert.equal(snapshot.total, 34.7);
 });
 
-test("free delivery threshold is calculated from rounded server price", () => {
+test("delivery is a fixed amount regardless of product total", () => {
   const snapshot = buildOrderSnapshotFromProducts(
     checkoutInput({ items: [{ productId: "123", qty: 1 }] }),
     new Map([["123", product({ price: 99.005 })]]),
   );
   assert.equal(snapshot.productTotal, 99.01);
-  assert.equal(snapshot.deliveryCost, 0);
-  assert.equal(snapshot.total, 99.01);
+  assert.equal(snapshot.deliveryCost, 10);
+  assert.equal(snapshot.total, 109.01);
 });
 
 test("empty cart, invalid quantity, and missing delivery data are rejected", () => {

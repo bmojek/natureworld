@@ -6,11 +6,13 @@ import { ShoppingCart, Check } from "lucide-react";
 import { Product } from "@/app/models/product";
 
 export default function AddToCartButton({ product, quantity = 1 }: { product: Product; quantity?: number }) {
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
   const [state, setState] = useState<"idle" | "adding" | "added">("idle");
+  const inCart = items.find((item) => item.productId === product.id)?.qty ?? 0;
+  const limitReached = inCart >= product.stock;
 
   const handleAdd = () => {
-    if (state !== "idle") return;
+    if (state !== "idle" || limitReached) return;
 
     setState("adding");
 
@@ -20,6 +22,7 @@ export default function AddToCartButton({ product, quantity = 1 }: { product: Pr
       price: product.price,
       image: product.images[0],
       slug: product.slug,
+      stock: product.stock,
       qty: Math.max(1, Math.floor(quantity)),
     });
 
@@ -30,6 +33,7 @@ export default function AddToCartButton({ product, quantity = 1 }: { product: Pr
   return (
     <button
       onClick={handleAdd}
+      disabled={limitReached}
       className="
         relative overflow-hidden
         h-12 w-full px-3
@@ -39,6 +43,7 @@ export default function AddToCartButton({ product, quantity = 1 }: { product: Pr
         transition-colors duration-300
         hover:bg-[#24652a]
         active:scale-[0.99]
+        disabled:cursor-not-allowed disabled:opacity-60
       "
     >
       <span className="invisible flex items-center gap-2">
@@ -65,7 +70,7 @@ export default function AddToCartButton({ product, quantity = 1 }: { product: Pr
         `}
       >
         <ShoppingCart size={18} />
-        Dodaj do koszyka
+        {limitReached ? "Limit dostępny w koszyku" : "Dodaj do koszyka"}
       </span>
 
       {/* ADDING */}

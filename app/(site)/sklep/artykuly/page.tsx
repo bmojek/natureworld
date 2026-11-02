@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
+
+export const metadata: Metadata = {
+  title: "Porady i artykuły",
+  description: "Porady i artykuły Nature-World o domu, ogrodzie i opiece nad zwierzętami.",
+  alternates: { canonical: "/sklep/artykuly" },
+};
 import { Newspaper } from "lucide-react";
 
 type Article = { id: string; title: string; slug: string; excerpt?: string; content?: string; images?: string[]; publishedAt?: number | string };

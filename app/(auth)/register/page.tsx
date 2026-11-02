@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "@/app/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -13,14 +13,22 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setNotice("");
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      router.push("/");
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      try {
+        await sendEmailVerification(credential.user);
+      } catch {
+        setNotice("Konto zostało utworzone, ale nie udało się wysłać linku. Możesz wysłać go ponownie w ustawieniach konta.");
+        return;
+      }
+      router.push("/sklep/profil");
     } catch {
       setError("Nie udało się utworzyć konta");
     }
@@ -48,6 +56,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleRegister} className="space-y-5">
           {error && <p role="alert" className="text-sm font-medium text-red-800">{error}</p>}
+          {notice && <p role="status" className="text-sm text-amber-900">{notice} <Link href="/sklep/profil" className="font-semibold underline">Przejdź do konta</Link></p>}
 
           <div>
             <label htmlFor="register-email" className="mb-1 block text-sm">Adres e-mail</label>

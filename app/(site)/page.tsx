@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, House, Leaf, Mail, MapPin, PawPrint, Phone, Search, SlidersHorizontal, Store } from "lucide-react";
 import HomeContent from "@/app/components/HomeContent";
 import { storeContact } from "@/app/lib/store-contact";
+
+export const metadata: Metadata = {
+  title: "Sklep dla domu, ogrodu i zwierząt",
+  description: "Odkryj ofertę Nature-World: produkty dla zwierząt, domu i ogrodu, wygodny katalog oraz aktualności sklepu.",
+  alternates: { canonical: "/" },
+};
 
 const departments = [
   { title: "ZWIERZĘTA", description: "Akcesoria i produkty dla zwierząt oraz akwarystyka.", href: "/sklep/dzial/zwierzeta", icon: PawPrint, theme: "bg-[#eff4e9]", iconTheme: "bg-[#dfead6] text-[#315d37]" },

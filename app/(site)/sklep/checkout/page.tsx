@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { ArrowLeft, CheckCircle2, LoaderCircle, ShoppingBag } from "lucide-react";
 import { useCart } from "@/app/context/cart-context";
+import { useAuth } from "@/app/context/auth-context";
+import { COURIER_SHIPPING_COST_PLN } from "@/app/lib/shipping";
 
 type CheckoutResponse = {
   orderId?: string | number;
@@ -37,6 +39,7 @@ function clearIdempotencyKey(keyRef: { current: string | null }) {
 
 export default function CheckoutPage() {
   const { items, ready, total, clearCart } = useCart();
+  const { user } = useAuth();
   const [wantInvoice, setWantInvoice] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [pending, setPending] = useState(false);
@@ -44,7 +47,7 @@ export default function CheckoutPage() {
   const [order, setOrder] = useState<{ number: string; total: number } | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
-  const estimatedDelivery = total >= 99 ? 0 : 15;
+  const estimatedDelivery = COURIER_SHIPPING_COST_PLN;
   const estimatedGrandTotal = total + estimatedDelivery;
 
   async function submitOrder(event: React.FormEvent<HTMLFormElement>) {
@@ -68,9 +71,11 @@ export default function CheckoutPage() {
     setError("");
 
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (user) headers.Authorization = `Bearer ${await user.getIdToken()}`;
       const response = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           idempotencyKey: getIdempotencyKey(idempotencyKey),
           items: items.map(({ productId, qty }) => ({ productId, qty })),
@@ -203,7 +208,7 @@ export default function CheckoutPage() {
             </label>
             <label className="space-y-2">
               <span className="text-sm font-medium">E-mail</span>
-              <input name="email" type="email" autoComplete="email" required maxLength={150} className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
+              <input key={user?.email ?? "guest"} name="email" type="email" autoComplete="email" defaultValue={user?.email ?? ""} required maxLength={150} className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
             </label>
             <label className="space-y-2">
               <span className="text-sm font-medium">Telefon</span>
@@ -246,7 +251,7 @@ export default function CheckoutPage() {
 
           <label className="flex items-start gap-3 text-sm leading-6">
             <input name="terms" type="checkbox" required className="mt-1 size-4 accent-primary" />
-            <span>Potwierdzam poprawność danych i akceptuję regulamin sklepu.</span>
+            <span>Potwierdzam poprawność danych i akceptuję <Link href="/regulamin" className="font-semibold text-primary underline underline-offset-2">regulamin sklepu</Link>. Informacje o przetwarzaniu danych znajdziesz w <Link href="/polityka-prywatnosci" className="font-semibold text-primary underline underline-offset-2">polityce prywatności</Link>.</span>
           </label>
 
           {error && (
@@ -274,7 +279,7 @@ export default function CheckoutPage() {
         </ul>
         <div className="mt-4 space-y-2 border-t border-black/10 pt-4 text-sm">
           <div className="flex justify-between"><span>Produkty (orientacyjnie)</span><span>{total.toFixed(2)} zł</span></div>
-          <div className="flex justify-between"><span>Dostawa</span><span>{estimatedDelivery ? `${estimatedDelivery.toFixed(2)} zł` : "Gratis"}</span></div>
+          <div className="flex justify-between"><span>Dostawa kurierem</span><span>{estimatedDelivery.toFixed(2)} zł</span></div>
           <div className="flex justify-between border-t border-black/10 pt-3 text-base font-semibold"><span>Szacunkowa suma</span><span>{estimatedGrandTotal.toFixed(2)} zł</span></div>
         </div>
         <p className="mt-4 text-xs leading-5 text-text-secondary">Ostateczna cena zostanie obliczona z aktualnych cen w Base.</p>
