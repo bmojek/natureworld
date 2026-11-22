@@ -3,7 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { getBaseProductsByIds } from "@/app/lib/base-store";
-import { adminDb } from "@/app/lib/firebase-admin";
+import { adminDb, firebaseAdminPrivateKey } from "@/app/lib/firebase-admin";
 import {
   buildOrderSnapshotFromProducts,
   digestOrderRequest,
@@ -22,7 +22,7 @@ export type CreateOrderResult = { order: OrderModel; repeated: boolean };
 
 function digestInput(input: CreateOrderInput) {
   // The Firebase Admin private key is already required to access Firestore and stays server-only.
-  const secret = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const secret = firebaseAdminPrivateKey;
   if (!secret) throw new Error("Firebase Admin credentials are not configured.");
   return digestOrderRequest(input, secret);
 }
