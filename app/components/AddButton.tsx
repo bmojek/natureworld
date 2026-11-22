@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { Product } from "@/app/models/product";
 
-export default function AddToCartButton({ product, quantity = 1 }: { product: Product; quantity?: number }) {
+export default function AddToCartButton({ product, quantity = 1, compact = false }: { product: Product; quantity?: number; compact?: boolean }) {
   const { addItem, items } = useCart();
   const [state, setState] = useState<"idle" | "adding" | "added">("idle");
   const inCart = items.find((item) => item.productId === product.id)?.qty ?? 0;
@@ -34,23 +34,18 @@ export default function AddToCartButton({ product, quantity = 1 }: { product: Pr
     <button
       onClick={handleAdd}
       disabled={limitReached}
-      className="
+      className={`
         relative overflow-hidden
-        h-12 w-full px-3
-        rounded-full font-semibold
+        w-full font-semibold
         bg-primary text-white
         flex items-center justify-center
         transition-colors duration-300
         hover:bg-[#24652a]
         active:scale-[0.99]
         disabled:cursor-not-allowed disabled:opacity-60
-      "
+        ${compact ? "h-11 rounded-xl px-2 text-sm sm:h-12 sm:rounded-full sm:px-3" : "h-12 rounded-full px-4 text-sm"}
+      `}
     >
-      <span className="invisible flex items-center gap-2">
-        <ShoppingCart size={18} />
-        Dodaj do koszyka
-      </span>
-
       {/* SHINE */}
       <span
         className={`
@@ -64,19 +59,19 @@ export default function AddToCartButton({ product, quantity = 1 }: { product: Pr
       {/* IDLE */}
       <span
         className={`
-          absolute flex items-center gap-2
+          absolute inset-x-1 flex items-center justify-center gap-1.5 whitespace-nowrap
           transition-all duration-200
           ${state === "idle" ? "opacity-100 scale-100" : "opacity-0 scale-95"}
         `}
       >
         <ShoppingCart size={18} />
-        {limitReached ? "Limit dostępny w koszyku" : "Dodaj do koszyka"}
+        {limitReached ? (compact ? "Limit w koszyku" : "Limit dostępny w koszyku") : (compact ? <><span className="sm:hidden">Do koszyka</span><span className="hidden sm:inline">Dodaj do koszyka</span></> : "Dodaj do koszyka")}
       </span>
 
       {/* ADDING */}
       <span
         className={`
-          absolute flex items-center gap-2
+          absolute inset-x-1 flex items-center justify-center gap-2
           transition-all duration-200
           ${state === "adding" ? "opacity-100 scale-100" : "opacity-0 scale-95"}
         `}
@@ -87,7 +82,7 @@ export default function AddToCartButton({ product, quantity = 1 }: { product: Pr
       {/* ADDED */}
       <span
         className={`
-          absolute flex items-center gap-2
+          absolute inset-x-1 flex items-center justify-center gap-2
           transition-all duration-300
           ${state === "added" ? "opacity-100 scale-100" : "opacity-0 scale-95"}
         `}

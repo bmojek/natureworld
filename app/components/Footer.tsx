@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { storeContact } from "@/app/lib/store-contact";
+import PaymentMethodBadges from "@/app/components/PaymentMethodBadges";
 
 const departments = [
   ["ZWIERZĘTA", "/sklep/dzial/zwierzeta"],
@@ -20,7 +21,7 @@ export default function Footer() {
       </div>
 
       <nav aria-label="Działy sklepu">
-        <h2 className="font-semibold">Sklep</h2>
+        <h2 className="footer-heading font-semibold">Sklep</h2>
         <ul className="mt-4 space-y-3 text-sm text-white/75">
           <li><Link href="/sklep" className="hover:text-white">Wszystkie produkty</Link></li>
           {departments.map(([label, href]) => <li key={href}><Link href={href} className="hover:text-white">{label}</Link></li>)}
@@ -29,7 +30,7 @@ export default function Footer() {
       </nav>
 
       <nav aria-label="Informacje i pomoc">
-        <h2 className="font-semibold">Informacje</h2>
+        <h2 className="footer-heading font-semibold">Informacje</h2>
         <ul className="mt-4 space-y-3 text-sm text-white/75">
           <li><Link href="/regulamin" className="hover:text-white">Regulamin sklepu</Link></li>
           <li><Link href="/polityka-prywatnosci" className="hover:text-white">Polityka prywatności</Link></li>
@@ -39,12 +40,14 @@ export default function Footer() {
       </nav>
 
       <div id="kontakt" className="scroll-mt-28">
-        <h2 className="font-semibold">Kontakt i zakupy</h2>
+        <h2 className="footer-heading font-semibold">Kontakt i zakupy</h2>
         <ul className="mt-4 space-y-3 text-sm text-white/75">
           <li><a className="inline-flex items-center gap-2 hover:text-white" href={storeContact.phoneHref}><Phone size={16} />{storeContact.phone}</a></li>
           <li><a className="inline-flex items-center gap-2 hover:text-white" href={storeContact.emailHref}><Mail size={16} />{storeContact.email}</a></li>
           <li><a className="inline-flex items-start gap-2 hover:text-white" href={storeContact.mapHref} target="_blank" rel="noreferrer"><MapPin size={16} className="mt-0.5 shrink-0" />{storeContact.address}</a></li>
-          <li className="pt-2 text-white/60">Dostępna metoda płatności: {storeContact.payment.toLowerCase()}.</li>
+          <li className="pt-2 text-white/75">Dostępna płatność: {storeContact.payment.toLowerCase()}.</li>
+          <li className="pt-1"><PaymentMethodBadges compact whiteApplePay /></li>
+          <li className="text-xs text-white/55">Płatności online są obecnie wyłączone.</li>
         </ul>
       </div>
     </div>

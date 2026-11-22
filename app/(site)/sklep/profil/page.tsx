@@ -80,8 +80,17 @@ function KontoContent() {
           cache: "no-store",
         });
       }
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Nie udało się pobrać zamówień.");
+      const payload = await response.json().catch(() => null) as {
+        error?: unknown;
+        orders?: unknown;
+        nextCursor?: unknown;
+      } | null;
+      if (!payload || typeof payload !== "object") {
+        throw new Error("Serwer chwilowo nie może pobrać zamówień. Spróbuj ponownie później.");
+      }
+      if (!response.ok) {
+        throw new Error(typeof payload.error === "string" ? payload.error : "Serwer chwilowo nie może pobrać zamówień.");
+      }
       const loaded = Array.isArray(payload.orders) ? payload.orders : [];
       setOrders((current) => append ? [...current, ...loaded] : loaded);
       setOrdersCursor(typeof payload.nextCursor === "string" ? payload.nextCursor : null);
@@ -213,7 +222,7 @@ function KontoContent() {
                 <div className="mt-3 space-y-1">
                   <p>{order.customer.fullName}</p><p>{order.customer.phone}</p>
                   <p>{order.shippingAddress.street}</p><p>{order.shippingAddress.postalCode} {order.shippingAddress.city}</p>
-                  <p className="pt-2">Płatność: {order.paymentMethod} · Dostawa: {order.deliveryMethod}</p>
+                  <p className="pt-2">Płatność: {order.paymentMethod === "cod" ? "za pobraniem" : "online"} · Dostawa: {order.deliveryMethod === "courier" ? "kurier" : order.deliveryMethod}</p>
                   <p>Produkty: {formatPrice(order.productTotal)} · Dostawa: {formatPrice(order.deliveryCost)}</p>
                   {order.discountTotal > 0 && <p>Rabat: −{formatPrice(order.discountTotal)}</p>}
                   <p className="font-semibold">Razem: {formatPrice(order.total)}</p>

@@ -55,6 +55,14 @@
   --font-heading: var(--font-poppins), Arial, sans-serif;
 }
 
+@utility footer-heading {
+  color: #fff !important;
+}
+
+@utility featured-news-title {
+  color: #fff !important;
+}
+
 body {
   background: var(--color-background);
   color: var(--color-text-main);
@@ -70,6 +78,10 @@ h5,
 h6 {
   font-family: var(--font-heading);
   color: var(--color-text-main);
+}
+
+footer h2 {
+  color: #fff;
 }
 @keyframes shine {
   0% {

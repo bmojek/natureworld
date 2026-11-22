@@ -3,13 +3,25 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, House, Leaf, Mail, MapPin, PawPrint, Phone, Search, SlidersHorizontal, Store } from "lucide-react";
 import HomeContent from "@/app/components/HomeContent";
+import HomeNews from "@/app/components/HomeNews";
+import PaymentMethodBadges from "@/app/components/PaymentMethodBadges";
 import { storeContact } from "@/app/lib/store-contact";
 
 export const metadata: Metadata = {
   title: "Sklep dla domu, ogrodu i zwierząt",
-  description: "Odkryj ofertę Nature-World: produkty dla zwierząt, domu i ogrodu, wygodny katalog oraz aktualności sklepu.",
+  description: "Sklep internetowy Nature-World — produkty dla zwierząt, domu i ogrodu. Przeglądaj katalog i sprawdź dostępne artykuły.",
   alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    title: "Sklep dla domu, ogrodu i zwierząt | Nature-World",
+    description: "Produkty dla zwierząt, domu i ogrodu. Poznaj ofertę sklepu internetowego Nature-World.",
+    url: "/",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Nature-World — sklep dla domu, ogrodu i zwierząt" }],
+  },
+  twitter: { card: "summary_large_image", images: ["/opengraph-image"] },
 };
+
+const canonicalSiteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nature-world.pl").toString();
 
 const departments = [
   { title: "ZWIERZĘTA", description: "Akcesoria i produkty dla zwierząt oraz akwarystyka.", href: "/sklep/dzial/zwierzeta", icon: PawPrint, theme: "bg-[#eff4e9]", iconTheme: "bg-[#dfead6] text-[#315d37]" },
@@ -25,6 +37,13 @@ const catalogSteps = [
 
 export default function HomePage() {
   return <main>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Nature-World",
+      url: canonicalSiteUrl,
+      inLanguage: "pl-PL",
+    }) }} />
     <section className="relative isolate overflow-hidden bg-[#173d2b] text-white">
       <Image src="/api/image/main_ogrod.webp" alt="Asortyment Nature-World do domu, ogrodu i dla zwierząt" fill priority sizes="100vw" className="-z-20 object-cover opacity-40" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102c20] via-[#173d2b]/85 to-[#173d2b]/20" />
@@ -41,6 +60,8 @@ export default function HomePage() {
         </div>
       </div>
     </section>
+
+    <HomeNews />
 
     <section aria-labelledby="departments-heading" className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
@@ -65,16 +86,16 @@ export default function HomePage() {
 
     <HomeContent />
 
-    <section aria-labelledby="catalog-guide-heading" className="border-y border-[#dfe7d8] bg-[#f7f9f5]">
+    <section aria-labelledby="catalog-guide-heading" className="border-y border-white/10 bg-[#173d2b] text-white">
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
-        <div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">Wygodne zakupy</p><h2 id="catalog-guide-heading" className="mt-2 text-3xl font-semibold tracking-tight text-[#173d2b]">Jak znaleźć właściwy produkt?</h2><p className="mt-3 text-sm leading-6 text-text-secondary">Skorzystaj z katalogu, kategorii albo wyszukiwarki — przejdź do produktów w kilku prostych krokach.</p></div>
+        <div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#c9e2bb]">Wygodne zakupy</p><h2 id="catalog-guide-heading" className="mt-2 text-3xl font-semibold tracking-tight !text-white">Jak znaleźć właściwy produkt?</h2><p className="mt-3 text-sm leading-6 text-white/75">Skorzystaj z katalogu, kategorii albo wyszukiwarki — przejdź do produktów w kilku prostych krokach.</p></div>
         <ol className="mt-8 grid gap-4 md:grid-cols-3">
-          {catalogSteps.map(({ number, title, description, icon: Icon }) => <li key={number} className="rounded-2xl border border-[#e1e8dc] bg-white p-5 shadow-sm md:p-6">
-            <div className="flex items-center justify-between"><span className="text-xs font-bold tracking-[.16em] text-primary">{number}</span><Icon size={20} className="text-primary" /></div>
-            <h3 className="mt-5 text-lg font-semibold text-[#173d2b]">{title}</h3><p className="mt-2 text-sm leading-6 text-text-secondary">{description}</p>
+          {catalogSteps.map(({ number, title, description, icon: Icon }) => <li key={number} className="rounded-2xl border border-white/10 bg-[#214b36] p-5 shadow-sm md:p-6">
+            <div className="flex items-center justify-between"><span className="text-xs font-bold tracking-[.16em] text-[#c9e2bb]">{number}</span><Icon size={20} className="text-[#c9e2bb]" /></div>
+            <h3 className="mt-5 text-lg font-semibold !text-white">{title}</h3><p className="mt-2 text-sm leading-6 text-white/75">{description}</p>
           </li>)}
         </ol>
-        <Link href="/sklep" className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-[#24652a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Przejdź do katalogu <ArrowRight size={16} /></Link>
+        <Link href="/sklep" className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#173d2b] transition hover:bg-[#eaf2e5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Przejdź do katalogu <ArrowRight size={16} /></Link>
       </div>
     </section>
 
@@ -104,7 +125,9 @@ export default function HomePage() {
           <div className="rounded-3xl border border-[#e1e8dc] bg-white p-6 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-[.14em] text-primary">Płatność</p>
             <h3 className="mt-2 text-lg font-semibold text-[#173d2b]">{storeContact.payment}</h3>
-            <p className="mt-2 text-sm leading-6 text-text-secondary">Aktualnie dostępna forma płatności w sklepie.</p>
+            <p className="mt-2 text-sm leading-6 text-text-secondary">Za pobraniem jest dostępne przy składaniu zamówienia. Metody online:</p>
+            <div className="mt-3"><PaymentMethodBadges compact /></div>
+            <p className="mt-2 text-xs text-text-secondary">Płatności online są obecnie wyłączone.</p>
           </div>
           <div className="flex flex-col justify-between rounded-3xl bg-[#edf3e9] p-6">
             <div><p className="text-xs font-bold uppercase tracking-[.14em] text-primary">Oferta</p><h3 className="mt-2 text-lg font-semibold text-[#173d2b]">Dom, ogród i zwierzęta</h3><p className="mt-2 text-sm leading-6 text-gray-600">Przejdź do katalogu Nature-World.</p></div>

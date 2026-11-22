@@ -3,6 +3,7 @@ import { Poppins, Roboto } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/auth-context";
 import { CartProvider } from "./context/cart-context";
+import { Analytics } from "@vercel/analytics/next";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -29,10 +30,11 @@ export const metadata: Metadata = {
     locale: "pl_PL",
     siteName: "Nature-World",
     title: "Nature-World — sklep dla domu, ogrodu i zwierząt",
-    description: "Produkty dla zwierząt, domu i ogrodu w sklepie Nature-World.",
+    description: "Produkty dla zwierząt, domu i ogrodu w sklepie Nature-World. Przeglądaj katalog i sprawdź aktualną ofertę.",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Nature-World — sklep dla domu, ogrodu i zwierząt" }],
   },
-  twitter: { card: "summary_large_image" },
-  robots: { index: true, follow: true },
+  twitter: { card: "summary_large_image", images: ["/opengraph-image"] },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
 };
 
 export default function RootLayout({
@@ -46,6 +48,7 @@ export default function RootLayout({
         <CartProvider>
           <AuthProvider>{children}</AuthProvider>
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   );

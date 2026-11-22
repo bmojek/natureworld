@@ -24,7 +24,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <Link href={`/sklep/produkt/${product.slug}`} className="min-h-12 text-sm font-medium leading-5 text-[#26352b] transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-primary sm:text-base sm:leading-6"><span className="line-clamp-2">{product.name}</span></Link>
         <div className="mt-auto pt-4">
           <p className="mb-3 text-lg font-bold tracking-tight text-[#173d2b] sm:text-xl">{priceIsValid ? <>{product.price.toFixed(2)} <span className="text-sm font-semibold">zł</span></> : <span className="text-sm font-medium text-[#59645d]">Cena niedostępna</span>}</p>
-          {priceIsValid && available ? <AddToCartButton product={product} /> : <Link href={`/sklep/produkt/${product.slug}`} className="block rounded-full bg-[#edf3e9] px-4 py-3 text-center text-sm font-semibold text-[#173d2b] transition hover:bg-[#e2ecdb] focus-visible:outline-2 focus-visible:outline-primary">Zobacz produkt</Link>}
+          {priceIsValid && available ? <AddToCartButton product={product} compact /> : <Link href={`/sklep/produkt/${product.slug}`} className="block rounded-full bg-[#edf3e9] px-4 py-3 text-center text-sm font-semibold text-[#173d2b] transition hover:bg-[#e2ecdb] focus-visible:outline-2 focus-visible:outline-primary">Zobacz produkt</Link>}
         </div>
       </div>
     </article>
