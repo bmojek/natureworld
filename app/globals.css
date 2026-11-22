@@ -80,6 +80,10 @@ h6 {
   color: var(--color-text-main);
 }
 
+#shop-department-title {
+  color: #fff !important;
+}
+
 footer h2 {
   color: #fff;
 }

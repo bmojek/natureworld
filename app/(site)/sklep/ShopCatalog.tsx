@@ -41,7 +41,7 @@ export default function Home() {
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102c20] via-[#173d2b]/85 to-transparent" />
       <div className="mx-auto flex min-h-72 max-w-7xl flex-col justify-center px-6 py-14 md:min-h-80">
         <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-lime-200"><Leaf size={15} />Nature-World</p>
-        <h1 className="max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl">Wybierz swój dział</h1>
+        <h1 id="shop-department-title" style={{ color: "#ffffff" }} className="max-w-2xl text-4xl font-semibold tracking-tight text-white !text-white md:text-5xl">Wybierz swój dział</h1>
         <p className="mt-4 max-w-xl text-sm leading-6 text-white/75 md:text-base">Przeglądaj katalog według kategorii dostępnych w Nature-World.</p>
       </div>
     </section>}

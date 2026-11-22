@@ -425,6 +425,41 @@ export async function getBaseProductsPage({
   return value;
 }
 
+/**
+ * Return canonical product slugs for the public sitemap. Reuses the same shared
+ * full-catalog list cache as the storefront and excludes records that cannot be
+ * opened as purchasable product pages (variants or missing configured prices).
+ */
+export async function getBaseProductSitemapSlugs(): Promise<string[]> {
+  const configuredInventoryId = inventoryId();
+  const priceGroupId = configuredPriceGroupId();
+  const listingCacheKey = `${configuredInventoryId}:all::full`;
+  const products = await listingMemoryCache.get(listingCacheKey, () =>
+    fetchAllBasePages(async (page) => {
+      const response = await getCachedBaseProductsList<
+        BaseResponse & { products: Record<string, BaseProductRecord> }
+      >({
+        inventory_id: configuredInventoryId,
+        page,
+        filter_sort: "id ASC",
+        include_variants: false,
+      });
+      return Object.values(response.products);
+    }, BASE_PAGE_SIZE),
+  );
+
+  return products.flatMap((product) => {
+    if (!Number.isSafeInteger(product.id) || product.id <= 0 || product.parent_id) return [];
+    try {
+      priceFor(product.prices, priceGroupId);
+      return [productSlug(product.name, product.id)];
+    } catch (error) {
+      if (error instanceof BaseProductPriceError) return [];
+      throw error;
+    }
+  });
+}
+
 type StockRecord = { product_id?: number; stock?: Record<string, number>; reservations?: Record<string, number> };
 
 async function getAllProductStock(categoryIds: string[], search?: string) {
