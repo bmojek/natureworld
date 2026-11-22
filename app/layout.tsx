@@ -1,21 +1,8 @@
 import type { Metadata } from "next";
-import { Poppins, Roboto } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/auth-context";
 import { CartProvider } from "./context/cart-context";
 import { Analytics } from "@vercel/analytics/next";
-
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-});
-
-const roboto = Roboto({
-  variable: "--font-roboto",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nature-world.pl"),
@@ -44,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl">
-      <body className={`${poppins.variable} ${roboto.variable} antialiased`}>
+      <body className="antialiased">
         <CartProvider>
           <AuthProvider>{children}</AuthProvider>
         </CartProvider>

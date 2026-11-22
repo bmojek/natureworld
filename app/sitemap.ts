@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { unstable_cache } from "next/cache";
 import { buildCategoryTree } from "@/app/lib/categories";
 import { getBaseCategories, getBaseProductSitemapSlugs } from "@/app/lib/base-store";
 import { resolveStorefrontDepartments } from "@/app/lib/storefront-categories";
@@ -7,9 +8,21 @@ const siteUrl = new URL(
   (process.env.NEXT_PUBLIC_SITE_URL || "https://nature-world.pl").replace(/\/+$/, ""),
 );
 
-// Product and category paths are refreshed daily. The catalog helper reads the
-// shared BaseLinker cache and does not request individual product details.
-export const revalidate = 86_400;
+// Render on request so a build without catalog credentials/cache cannot bake an
+// incomplete sitemap into the deployment. Successful catalog snapshots persist
+// in Next's shared Data Cache for a day; failed loads are not cached.
+export const dynamic = "force-dynamic";
+
+const readSitemapCategories = unstable_cache(
+  () => getBaseCategories(),
+  ["natureworld-sitemap-categories-v1"],
+  { revalidate: 86_400, tags: ["base-store-categories"] },
+);
+const readSitemapProductSlugs = unstable_cache(
+  () => getBaseProductSitemapSlugs(),
+  ["natureworld-sitemap-products-v1"],
+  { revalidate: 86_400, tags: ["base-store-products"] },
+);
 
 const staticEntries: Array<{
   path: string;
@@ -32,8 +45,8 @@ const staticEntries: Array<{
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries = new Map(staticEntries.map((entry) => [entry.path, entry]));
   const [categoriesResult, productsResult] = await Promise.allSettled([
-    getBaseCategories(),
-    getBaseProductSitemapSlugs(),
+    readSitemapCategories(),
+    readSitemapProductSlugs(),
   ]);
 
   if (categoriesResult.status === "fulfilled") {

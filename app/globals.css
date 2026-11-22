@@ -22,8 +22,10 @@
   --color-disabled-surface: #e7ebe6;
   --color-disabled-text: #56635a;
   --color-focus: #2f7d32;
-  --font-sans: var(--font-roboto), Arial, sans-serif;
-  --font-heading: var(--font-poppins), Arial, sans-serif;
+  --font-roboto: Arial, Helvetica, sans-serif;
+  --font-poppins: "Trebuchet MS", Arial, sans-serif;
+  --font-sans: var(--font-roboto);
+  --font-heading: var(--font-poppins);
   --content-width: 80rem;
 }
 @theme {
