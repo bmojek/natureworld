@@ -1,8 +1,31 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "./context/auth-context";
 import { CartProvider } from "./context/cart-context";
 import { Analytics } from "@vercel/analytics/next";
+
+const poppins = localFont({
+  src: [
+    { path: "../public/fonts/poppins-regular.ttf", weight: "400" },
+    { path: "../public/fonts/poppins-semibold.ttf", weight: "600" },
+    { path: "../public/fonts/poppins-bold.ttf", weight: "700" },
+  ],
+  variable: "--font-poppins",
+  display: "swap",
+  fallback: ["Arial", "sans-serif"],
+});
+
+const roboto = localFont({
+  src: [
+    { path: "../public/fonts/roboto-regular.ttf", weight: "400" },
+    { path: "../public/fonts/roboto-medium.ttf", weight: "500" },
+    { path: "../public/fonts/roboto-bold.ttf", weight: "700" },
+  ],
+  variable: "--font-roboto",
+  display: "swap",
+  fallback: ["Arial", "sans-serif"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nature-world.pl"),
@@ -31,7 +54,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl">
-      <body className="antialiased">
+      <body className={`${poppins.variable} ${roboto.variable} antialiased`}>
         <CartProvider>
           <AuthProvider>{children}</AuthProvider>
         </CartProvider>
